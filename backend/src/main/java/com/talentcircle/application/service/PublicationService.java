@@ -26,7 +26,7 @@ public class PublicationService implements PublicationUseCase {
     }
 
     @Override
-    public Publication publishDraft(String draftId) {
+    public PublicationDto publishDraft(String draftId) {
         Draft draft = draftRepository.findById(draftId)
                 .orElseThrow(() -> new RuntimeException("Draft not found"));
 
@@ -53,19 +53,22 @@ public class PublicationService implements PublicationUseCase {
             publication.setErrorMessage(e.getMessage());
         }
 
-        return publicationRepository.save(publication);
+        publication = publicationRepository.save(publication);
+        
+        return new PublicationDto(
+            publication.getId(),
+            publication.getDraft().getId(),
+            publication.getStatus().name(),
+            publication.getExternalPostId(),
+            publication.getPublishedAt() != null ? publication.getPublishedAt().toString() : null,
+            publication.getErrorMessage()
+        );
     }
 
     @Override
-    public byte[] exportJson(String week) {
-        // Implementation: fetch approved drafts and generate JSON
-        throw new RuntimeException("Export JSON not implemented yet");
-    }
-
-    @Override
-    public byte[] exportCsv(String week) {
-        // Implementation: fetch approved drafts and generate CSV using OpenCSV
-        throw new RuntimeException("Export CSV not implemented yet");
+    public byte[] exportDrafts(ExportRequest request) {
+        // Implementation: fetch approved drafts and generate export
+        throw new RuntimeException("Export not implemented yet");
     }
 
     private Publication.Channel mapChannel(Draft.Channel draftChannel) {
