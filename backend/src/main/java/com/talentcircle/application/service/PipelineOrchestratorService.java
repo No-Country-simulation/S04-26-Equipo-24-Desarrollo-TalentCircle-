@@ -1,27 +1,32 @@
 package com.talentcircle.application.service;
 
 import com.talentcircle.domain.model.WeeklyExecution;
+import com.talentcircle.domain.port.in.CommunityCollectorUseCase;
+import com.talentcircle.domain.port.in.AiAnalyzerUseCase;
+import com.talentcircle.domain.port.in.DraftGeneratorUseCase;
 import com.talentcircle.domain.port.in.PipelineOrchestratorUseCase;
 import com.talentcircle.domain.port.out.WeeklyExecutionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @Transactional
 public class PipelineOrchestratorService implements PipelineOrchestratorUseCase {
 
     private final WeeklyExecutionRepository executionRepository;
-    private final com.talentcircle.domain.port.in.CommunityCollectorUseCase communityCollectorUseCase;
-    private final com.talentcircle.domain.port.in.AiAnalyzerUseCase aiAnalyzerUseCase;
-    private final com.talentcircle.domain.port.in.DraftGeneratorUseCase draftGeneratorUseCase;
+    private final CommunityCollectorUseCase communityCollectorUseCase;
+    private final AiAnalyzerUseCase aiAnalyzerUseCase;
+    private final DraftGeneratorUseCase draftGeneratorUseCase;
 
     public PipelineOrchestratorService(
             WeeklyExecutionRepository executionRepository,
-            com.talentcircle.domain.port.in.CommunityCollectorUseCase communityCollectorUseCase,
-            com.talentcircle.domain.port.in.AiAnalyzerUseCase aiAnalyzerUseCase,
-            com.talentcircle.domain.port.in.DraftGeneratorUseCase draftGeneratorUseCase) {
+            CommunityCollectorUseCase communityCollectorUseCase,
+            AiAnalyzerUseCase aiAnalyzerUseCase,
+            DraftGeneratorUseCase draftGeneratorUseCase) {
         this.executionRepository = executionRepository;
         this.communityCollectorUseCase = communityCollectorUseCase;
         this.aiAnalyzerUseCase = aiAnalyzerUseCase;
@@ -29,39 +34,78 @@ public class PipelineOrchestratorService implements PipelineOrchestratorUseCase 
     }
 
     @Override
-    public void runWeeklyPipeline(String triggeredBy) {
+    public String runWeeklyPipeline(String triggeredBy) {
         WeeklyExecution execution = new WeeklyExecution();
+        execution.setId(UUID.randomUUID().toString());
         LocalDate now = LocalDate.now();
         execution.setWeekStart(now.minusDays(now.getDayOfWeek().getValue() - 1)); // Monday
         execution.setWeekEnd(execution.getWeekStart().plusDays(6)); // Sunday
         execution.setStatus(WeeklyExecution.ExecutionStatus.RUNNING);
-        execution.setStartedAt(java.time.LocalDateTime.now());
+        execution.setStartedAt(LocalDateTime.now());
         execution.setTriggeredBy(triggeredBy);
 
         execution = executionRepository.save(execution);
+        String executionId = execution.getId();
 
         try {
-            // Step 1: Collect activities
-            // communityCollectorUseCase.collectActivity(execution.getId(), ...);
+            // Step 1: Collect activities from all active sources
+            // In real implementation: fetch all active sources and collect from each
+            // For now, assuming a default source ID
+            communityCollectorUseCase.collectActivity(executionId, "source-123");
 
-            // Step 2: Analyze with AI
-            // aiAnalyzerUseCase.analyzeActivity(execution.getId(), ...);
+            // Step 2: Analyze activities with AI
+            aiAnalyzerUseCase.analyzeActivity(executionId, "Analyze these activities for content generation");
 
-            // Step 3: Generate drafts
-            // draftGeneratorUseCase.generateDrafts(execution.getId());
+            // Step 3: Generate drafts for all channels
+            draftGeneratorUseCase.generateDrafts(executionId);
 
             execution.setStatus(WeeklyExecution.ExecutionStatus.COMPLETED);
-            execution.setCompletedAt(java.time.LocalDateTime.now());
+            execution.setCompletedAt(LocalDateTime.now());
+
         } catch (Exception e) {
             execution.setStatus(WeeklyExecution.ExecutionStatus.FAILED);
-            execution.setCompletedAt(java.time.LocalDateTime.now());
+            execution.setCompletedAt(LocalDateTime.now());
+            throw new RuntimeException("Pipeline failed for execution " + executionId + ": " + e.getMessage(), e);
         }
 
         executionRepository.save(execution);
+        return executionId;
     }
 
     @Override
     public void retryFailedStep(String executionId) {
-        throw new RuntimeException("Retry not implemented yet");
+        WeeklyExecution execution = executionRepository.findById(executionId)
+                .orElseThrow(() -> new IllegalArgumentException("Execution not found: " + executionId));
+
+        if (execution.getStatus() != WeeklyExecution.ExecutionStatus.FAILED) {
+            throw new IllegalStateException("Only FAILED executions can be retried");
+        }
+
+        // Reset status to RUNNING and retry
+        execution.setStatus(WeeklyExecution.ExecutionStatus.RUNNING);
+        execution.setCompletedAt(null);
+        execution = executionRepository.save(execution);
+
+        try {
+            // Retry the pipeline from the beginning
+            // Step 1: Collect activities
+            communityCollectorUseCase.collectActivity(executionId, "source-123");
+
+            // Step 2: Analyze with AI
+            aiAnalyzerUseCase.analyzeActivity(executionId, "Analyze these activities for content generation");
+
+            // Step 3: Generate drafts
+            draftGeneratorUseCase.generateDrafts(executionId);
+
+            execution.setStatus(WeeklyExecution.ExecutionStatus.COMPLETED);
+            execution.setCompletedAt(LocalDateTime.now());
+
+        } catch (Exception e) {
+            execution.setStatus(WeeklyExecution.ExecutionStatus.FAILED);
+            execution.setCompletedAt(LocalDateTime.now());
+            throw new RuntimeException("Pipeline retry failed for execution " + executionId + ": " + e.getMessage(), e);
+        }
+
+        executionRepository.save(execution);
     }
 }
