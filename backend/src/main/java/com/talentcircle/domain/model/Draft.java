@@ -25,7 +25,7 @@ public class Draft extends AuditableEntity {
     @Column(nullable = false)
     private DraftStatus status; // PENDING, APPROVED, REJECTED, PUBLISHED
 
-    @Column(name = "ai_score", precision = 4, scale = 2)
+    @Column(name = "ai_score")
     private Double aiScore;
 
     @ManyToOne(fetch = FetchType.LAZY)

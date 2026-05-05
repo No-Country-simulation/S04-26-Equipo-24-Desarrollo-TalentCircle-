@@ -26,7 +26,12 @@ public class DraftReviewService implements DraftReviewUseCase {
     @Override
     public List<DraftSummaryDto> listDrafts(String channel, String status, String weekStart, String weekEnd, int page, int size) {
         // Implementation: fetch from DB with filters
-        List<Draft> drafts = draftRepository.findByFilters(channel, status, weekStart, weekEnd);
+        List<Draft> drafts;
+        if (status != null) {
+            drafts = draftRepository.findByStatus(Draft.DraftStatus.valueOf(status));
+        } else {
+            drafts = draftRepository.findAll();
+        }
         return drafts.stream()
                 .skip((long) page * size)
                 .limit(size)

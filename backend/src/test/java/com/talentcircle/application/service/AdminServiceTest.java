@@ -52,7 +52,7 @@ class AdminServiceTest {
         source1.setName("Discord");
         source1.setActive(true);
 
-        when(sourceRepository.findAllActive()).thenReturn(Arrays.asList(source1));
+        when(sourceRepository.findAll()).thenReturn(Arrays.asList(source1));
 
         // When
         List<AdminUseCase.SourceDto> result = adminService.getSources();

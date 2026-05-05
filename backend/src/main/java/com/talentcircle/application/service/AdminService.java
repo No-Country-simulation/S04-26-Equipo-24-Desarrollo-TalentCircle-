@@ -36,7 +36,8 @@ public class AdminService implements AdminUseCase {
 
     @Override
     public List<SourceDto> getSources() {
-        return sourceRepository.findAllActive().stream()
+        return sourceRepository.findAll().stream()
+                .filter(CommunitySource::isActive)
                 .map(this::mapToSourceDto)
                 .collect(Collectors.toList());
     }

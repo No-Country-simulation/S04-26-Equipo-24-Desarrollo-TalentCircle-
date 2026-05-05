@@ -15,7 +15,7 @@ public class DraftSource extends AuditableEntity {
     @JoinColumn(name = "activity_id")
     private CommunityActivity activity;
 
-    @Column(name = "relevance_score", precision = 4, scale = 2)
+    @Column(name = "relevance_score")
     private Double relevanceScore;
 
     // Getters and Setters

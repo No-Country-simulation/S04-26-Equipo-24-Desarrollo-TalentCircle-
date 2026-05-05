@@ -42,7 +42,7 @@ docx_temp/
 
 # Build
 build/
-out/
+/out/
 
 # Generated
 backend-generated.zip

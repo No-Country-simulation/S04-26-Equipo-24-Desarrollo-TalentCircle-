@@ -1,12 +1,13 @@
 package com.talentcircle.domain.port.out;
 
 import com.talentcircle.domain.model.CommunitySource;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-public interface CommunitySourceRepository {
-    CommunitySource save(CommunitySource source);
-    Optional<CommunitySource> findById(String id);
-    List<CommunitySource> findAllActive();
-    void delete(CommunitySource source);
+@Repository
+public interface CommunitySourceRepository extends JpaRepository<CommunitySource, String> {
+    List<CommunitySource> findAllByActiveTrue();
+    void deleteByActiveFalse();
 }

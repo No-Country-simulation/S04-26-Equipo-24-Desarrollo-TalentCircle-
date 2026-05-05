@@ -1,10 +1,11 @@
 package com.talentcircle.domain.port.out;
 
 import com.talentcircle.domain.model.Publication;
-import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
 
-public interface PublicationRepository {
-    Publication save(Publication publication);
-    Optional<Publication> findByDraftId(String draftId);
-    void delete(Publication publication);
+@Repository
+public interface PublicationRepository extends JpaRepository<Publication, String> {
+    List<Publication> findByDraftId(String draftId);
 }

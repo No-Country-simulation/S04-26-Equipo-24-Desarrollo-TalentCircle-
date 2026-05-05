@@ -6,10 +6,12 @@ import com.talentcircle.domain.model.AiAnalysis;
 import com.talentcircle.domain.model.CommunityActivity;
 import com.talentcircle.domain.port.out.LlmClientPort;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Primary
 @Component
 public class OpenAiClientAdapter implements LlmClientPort {
 
