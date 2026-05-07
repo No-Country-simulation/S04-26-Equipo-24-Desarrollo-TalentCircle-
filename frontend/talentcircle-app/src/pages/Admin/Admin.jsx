@@ -56,7 +56,7 @@ function Toggle({ active, onChange, disabled }) {
 
 // ─── New User Modal ───────────────────────────────────────────────────────────
 function NewUserModal({ onClose, onSave }) {
-  const [form, setForm] = useState({ fullName: '', email: '', role: 'EDITOR', active: true })
+  const [form, setForm] = useState({ fullName: '', email: '', password: '', role: 'EDITOR', active: true })
   const [saving, setSaving] = useState(false)
 
   const handleSubmit = async (e) => {
@@ -76,27 +76,52 @@ function NewUserModal({ onClose, onSave }) {
         <h3 className={styles.modalTitle}>Nuevo usuario</h3>
         <form onSubmit={handleSubmit}>
           <div className="field">
-            <label>Nombre completo</label>
+            <label htmlFor="new-fullname">Nombre completo</label>
             <input
+              id="new-fullname"
+              name="fullName"
               required
               value={form.fullName}
               onChange={(e) => setForm({ ...form, fullName: e.target.value })}
               placeholder="Nombre Apellido"
+              autoComplete="name"
             />
           </div>
           <div className="field">
-            <label>Email</label>
+            <label htmlFor="new-email">Email</label>
             <input
+              id="new-email"
+              name="email"
               required
               type="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               placeholder="usuario@talentcircle.com"
+              autoComplete="email"
             />
           </div>
           <div className="field">
-            <label>Rol</label>
-            <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+            <label htmlFor="new-password">Contraseña</label>
+            <input
+              id="new-password"
+              name="password"
+              required
+              type="password"
+              minLength={8}
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              placeholder="Mínimo 8 caracteres"
+              autoComplete="new-password"
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="new-role">Rol</label>
+            <select
+              id="new-role"
+              name="role"
+              value={form.role}
+              onChange={(e) => setForm({ ...form, role: e.target.value })}
+            >
               <option value="EDITOR">EDITOR</option>
               <option value="ADMIN">ADMIN</option>
             </select>
