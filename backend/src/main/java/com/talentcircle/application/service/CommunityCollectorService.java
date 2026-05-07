@@ -5,30 +5,50 @@ import com.talentcircle.domain.model.CommunitySource;
 import com.talentcircle.domain.model.WeeklyExecution;
 import com.talentcircle.domain.port.in.CommunityCollectorUseCase;
 import com.talentcircle.domain.port.out.CommunityActivityRepository;
+import com.talentcircle.domain.port.out.CommunityClientPort;
 import com.talentcircle.domain.port.out.CommunitySourceRepository;
 import com.talentcircle.domain.port.out.WeeklyExecutionRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
+/**
+ * Collects community activity from configured sources.
+ * RF-01 to RF-06: Recolección de Actividad Comunitaria.
+ * Persists all raw activity before AI processing (RF-06).
+ */
 @Service
 @Transactional
 public class CommunityCollectorService implements CommunityCollectorUseCase {
 
+    private static final Logger log = LoggerFactory.getLogger(CommunityCollectorService.class);
+    private static final int DEFAULT_ITEMS_PER_TYPE = 10;
+
     private final CommunityActivityRepository activityRepository;
     private final WeeklyExecutionRepository executionRepository;
     private final CommunitySourceRepository sourceRepository;
+    private final CommunityClientPort discordClient;
+    private final CommunityClientPort circleClient;
+    private final CommunityClientPort slackClient;
 
-    public CommunityCollectorService(CommunityActivityRepository activityRepository,
-                                   WeeklyExecutionRepository executionRepository,
-                                   CommunitySourceRepository sourceRepository) {
+    public CommunityCollectorService(
+            CommunityActivityRepository activityRepository,
+            WeeklyExecutionRepository executionRepository,
+            CommunitySourceRepository sourceRepository,
+            @Qualifier("discordClientAdapter") CommunityClientPort discordClient,
+            @Qualifier("circleClientAdapter") CommunityClientPort circleClient,
+            @Qualifier("slackClientAdapter") CommunityClientPort slackClient) {
         this.activityRepository = activityRepository;
         this.executionRepository = executionRepository;
         this.sourceRepository = sourceRepository;
+        this.discordClient = discordClient;
+        this.circleClient = circleClient;
+        this.slackClient = slackClient;
     }
 
     @Override
@@ -40,105 +60,62 @@ public class CommunityCollectorService implements CommunityCollectorUseCase {
                 .orElseThrow(() -> new IllegalArgumentException("Source not found: " + sourceId));
 
         if (!source.isActive()) {
-            throw new IllegalStateException("Source is not active: " + sourceId);
+            log.warn("Skipping inactive source: {}", sourceId);
+            return;
         }
 
-        List<CommunityActivity> activities = fetchActivitiesFromSource(source, execution);
-        activities.forEach(activity -> {
-            activity.setExecution(execution);
-            activityRepository.save(activity);
-        });
+        log.info("Collecting from source={} type={} for executionId={}", source.getName(), source.getType(), executionId);
 
-        execution.setStatus(WeeklyExecution.ExecutionStatus.COMPLETED);
-        execution.setCompletedAt(LocalDateTime.now());
-        executionRepository.save(execution);
+        CommunityClientPort client = resolveClient(source.getType());
+        String apiUrl = source.getApiUrl();
+        String apiKey = source.getApiKeyEncrypted(); // already decrypted by AdminService before storing in memory
+
+        List<CommunityActivity> activities = new ArrayList<>();
+
+        // RF-02: Posts más reaccionados
+        try {
+            activities.addAll(client.fetchTopPosts(apiUrl, apiKey, DEFAULT_ITEMS_PER_TYPE));
+        } catch (Exception e) {
+            log.error("Failed to fetch posts from {}: {}", source.getName(), e.getMessage());
+        }
+
+        // RF-03: Preguntas más respondidas
+        try {
+            activities.addAll(client.fetchTopQuestions(apiUrl, apiKey, DEFAULT_ITEMS_PER_TYPE));
+        } catch (Exception e) {
+            log.error("Failed to fetch questions from {}: {}", source.getName(), e.getMessage());
+        }
+
+        // RF-04: Recursos más compartidos
+        try {
+            activities.addAll(client.fetchTopResources(apiUrl, apiKey, DEFAULT_ITEMS_PER_TYPE));
+        } catch (Exception e) {
+            log.error("Failed to fetch resources from {}: {}", source.getName(), e.getMessage());
+        }
+
+        // RF-06: Persist ALL raw activity BEFORE AI processing
+        for (CommunityActivity activity : activities) {
+            activity.setExecution(execution);
+            activity.setSourceId(source.getId());
+            activityRepository.save(activity);
+        }
+
+        log.info("Persisted {} activities from source={} for executionId={}", activities.size(), source.getName(), executionId);
     }
 
     @Override
     public List<CommunityActivityDto> getActivitiesByExecution(String executionId) {
-        List<CommunityActivity> activities = activityRepository.findByExecutionId(executionId);
-        return activities.stream()
+        return activityRepository.findByExecutionId(executionId).stream()
                 .map(this::mapToDto)
                 .toList();
     }
 
-    private List<CommunityActivity> fetchActivitiesFromSource(CommunitySource source, WeeklyExecution execution) {
-        List<CommunityActivity> activities = new ArrayList<>();
-
-        CommunitySource.SourceType sourceType = source.getType();
-        if (sourceType == null) {
-            throw new IllegalArgumentException("Source type is null for source: " + source.getId());
-        }
-
-        switch (sourceType) {
-            case DISCORD:
-                activities.addAll(fetchDiscordActivities(source));
-                break;
-            case CIRCLE:
-                activities.addAll(fetchCircleActivities(source));
-                break;
-            case SLACK:
-                activities.addAll(fetchSlackActivities(source));
-                break;
-            default:
-                throw new IllegalArgumentException("Unsupported source type: " + sourceType);
-        }
-
-        return activities;
-    }
-
-    private List<CommunityActivity> fetchDiscordActivities(CommunitySource source) {
-        List<CommunityActivity> activities = new ArrayList<>();
-        // Simulate Discord API call
-        CommunityActivity activity = new CommunityActivity();
-        activity.setId(UUID.randomUUID().toString());
-        activity.setType(CommunityActivity.ActivityType.POST);
-        activity.setTitle("Discord Community Update");
-        activity.setContent("Sample Discord post from " + source.getName());
-        activity.setAuthor("Discord User");
-        activity.setPublishedAt(LocalDateTime.now());
-        activity.setSourceUrl(source.getApiUrl() + "/channels/123/messages/456");
-        activity.setReactionCount(10);
-        activity.setResponseCount(5);
-        activity.setShareCount(2);
-        activities.add(activity);
-        return activities;
-    }
-
-    private List<CommunityActivity> fetchCircleActivities(CommunitySource source) {
-        List<CommunityActivity> activities = new ArrayList<>();
-        // Simulate Circle API call
-        CommunityActivity activity = new CommunityActivity();
-        activity.setId(UUID.randomUUID().toString());
-        activity.setType(CommunityActivity.ActivityType.QUESTION);
-        activity.setTitle("Circle Community Question");
-        activity.setContent("Sample Circle question from " + source.getName());
-        activity.setAuthor("Circle Member");
-        activity.setPublishedAt(LocalDateTime.now());
-        activity.setSourceUrl(source.getApiUrl() + "/posts/789");
-        activity.setReactionCount(15);
-        activity.setResponseCount(8);
-        activity.setShareCount(3);
-        activities.add(activity);
-        return activities;
-    }
-
-    private List<CommunityActivity> fetchSlackActivities(CommunitySource source) {
-        List<CommunityActivity> activities = new ArrayList<>();
-        // Simulate Slack API call
-        CommunityActivity activity = new CommunityActivity();
-        activity.setId(UUID.randomUUID().toString());
-        activity.setType(CommunityActivity.ActivityType.RESOURCE);
-        activity.setTitle("Slack Resource Share");
-        activity.setContent("Sample Slack resource from " + source.getName());
-        activity.setAuthor("Slack User");
-        activity.setPublishedAt(LocalDateTime.now());
-        activity.setSourceUrl(source.getApiUrl() + "/messages/012");
-        activity.setReactionCount(20);
-        activity.setResponseCount(12);
-        activity.setShareCount(5);
-        activities.add(activity);
-        return activities;
+    private CommunityClientPort resolveClient(CommunitySource.SourceType type) {
+        return switch (type) {
+            case DISCORD -> discordClient;
+            case CIRCLE -> circleClient;
+            case SLACK -> slackClient;
+        };
     }
 
     private CommunityActivityDto mapToDto(CommunityActivity activity) {

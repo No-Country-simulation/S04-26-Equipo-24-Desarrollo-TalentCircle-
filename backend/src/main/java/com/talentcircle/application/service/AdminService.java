@@ -113,8 +113,18 @@ public class AdminService implements AdminUseCase {
 
     @Override
     public UserDto createUser(CreateUserRequest request) {
-        // Implementation needed
-        throw new RuntimeException("Not implemented yet");
+        if (userRepository.existsByEmail(request.email())) {
+            throw new RuntimeException("Email already exists: " + request.email());
+        }
+        User user = new User();
+        user.setEmail(request.email());
+        user.setPasswordHash(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder(12)
+                .encode(request.password()));
+        user.setFullName(request.fullName());
+        user.setRole(User.Role.valueOf(request.role()));
+        user.setActive(true);
+        User saved = userRepository.save(user);
+        return mapToUserDto(saved);
     }
 
     @Override
@@ -146,8 +156,9 @@ public class AdminService implements AdminUseCase {
 
     @Override
     public void triggerExecution(String triggeredBy) {
-        // Implementation: trigger pipeline manually
-        throw new RuntimeException("Not implemented yet");
+        // Delegated to PipelineOrchestratorService via ExecutionController
+        // This method is kept for interface compliance; actual trigger goes through the orchestrator
+        throw new UnsupportedOperationException("Use ExecutionController.triggerExecution which calls PipelineOrchestratorUseCase directly");
     }
 
     private SourceDto mapToSourceDto(CommunitySource source) {

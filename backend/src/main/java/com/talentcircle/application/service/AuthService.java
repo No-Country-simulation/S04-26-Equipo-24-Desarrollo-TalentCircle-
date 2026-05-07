@@ -64,16 +64,26 @@ public class AuthService implements AuthUseCase {
     @Override
     public LoginResponse refresh(RefreshRequest request) {
         if (!jwtService.isValid(request.refreshToken())) {
-            throw new RuntimeException("Invalid refresh token");
+            throw new RuntimeException("Invalid or expired refresh token");
         }
-
-        // In real implementation, validate against stored hash in DB
-        // For now, just generate new tokens
-
-        // Extract user info from refresh token or fetch from DB
-        // This is simplified - should validate refresh token properly
-
-        throw new RuntimeException("Refresh token validation not fully implemented");
+        // Extract userId from refresh token subject
+        String userId = jwtService.extractUserId(request.refreshToken());
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            throw new RuntimeException("User not found for refresh token");
+        }
+        User user = userOpt.get();
+        if (!user.isActive()) {
+            throw new RuntimeException("User is inactive");
+        }
+        String newAccessToken = jwtService.generateAccessToken(user.getId(), user.getRole().name());
+        String newRefreshToken = jwtService.generateRefreshToken();
+        return new LoginResponse(
+                newAccessToken,
+                newRefreshToken,
+                "28800000",
+                new UserDto(user.getId(), user.getEmail(), user.getFullName(), user.getRole().name())
+        );
     }
 
     @Override
@@ -127,7 +137,12 @@ public class AuthService implements AuthUseCase {
 
     @Override
     public void changePassword(String userId, String currentPassword, String newPassword) {
-        // Implementation needed
-        throw new RuntimeException("Not implemented yet");
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new RuntimeException("Current password is incorrect");
+        }
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 }
