@@ -54,7 +54,7 @@ app:
     refresh-token-expiration: 604800000 # 7 días en ms
   
   cors:
-    allowed-origins: ${FRONTEND_URL:http://localhost:3000}
+    allowed-origins: ${FRONTEND_URL:http://localhost:5173}
 
   pipeline:
     schedule-cron: ${PIPELINE_SCHEDULE_CRON:0 0 18 * * FRI}

@@ -24,8 +24,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ForbiddenException.class)
     public ResponseEntity<ApiResponse<Void>> handleForbidden(ForbiddenException ex) {
+        // Credenciales inválidas → 401, resto de accesos denegados → 403
+        String msg = ex.getMessage();
+        if (msg != null && (msg.contains("inválidas") || msg.contains("Refresh token"))) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error(msg));
+        }
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(ApiResponse.error(ex.getMessage()));
+                .body(ApiResponse.error(msg));
     }
 
     @ExceptionHandler(ConflictException.class)
@@ -61,5 +67,4 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleGeneric(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("An unexpected error occurred"));
-    }
-}
+    }}
