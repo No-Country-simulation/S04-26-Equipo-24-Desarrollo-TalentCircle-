@@ -1,5 +1,8 @@
 package com.talentcircle.application.service;
 
+import com.talentcircle.common.exception.ConflictException;
+import com.talentcircle.common.exception.ForbiddenException;
+import com.talentcircle.common.exception.ResourceNotFoundException;
 import com.talentcircle.common.security.EncryptionService;
 import com.talentcircle.common.security.JwtService;
 import com.talentcircle.domain.model.User;
@@ -33,30 +36,25 @@ public class AuthService implements AuthUseCase {
     public LoginResponse login(LoginRequest request) {
         Optional<User> userOpt = userRepository.findByEmail(request.email());
 
-        if (userOpt.isEmpty()) {
-            throw new RuntimeException("Invalid credentials");
+        // Mismo mensaje para usuario no encontrado y contraseña incorrecta
+        // evita enumerar usuarios válidos
+        if (userOpt.isEmpty() || !passwordEncoder.matches(request.password(), userOpt.get().getPasswordHash())) {
+            throw new ForbiddenException("Credenciales inválidas");
         }
 
         User user = userOpt.get();
 
         if (!user.isActive()) {
-            throw new RuntimeException("User is inactive");
-        }
-
-        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new ForbiddenException("Usuario inactivo. Contacta al administrador.");
         }
 
         String accessToken = jwtService.generateAccessToken(user.getId(), user.getRole().name());
         String refreshToken = jwtService.generateRefreshToken();
 
-        // Store refresh token hash in user entity (in real implementation, store in separate table)
-        // For now, we'll just return it
-
         return new LoginResponse(
                 accessToken,
                 refreshToken,
-                "28800000", // 8 hours in ms
+                "28800000",
                 new UserDto(user.getId(), user.getEmail(), user.getFullName(), user.getRole().name())
         );
     }
@@ -64,28 +62,21 @@ public class AuthService implements AuthUseCase {
     @Override
     public LoginResponse refresh(RefreshRequest request) {
         if (!jwtService.isValid(request.refreshToken())) {
-            throw new RuntimeException("Invalid refresh token");
+            throw new ForbiddenException("Refresh token inválido o expirado");
         }
-
-        // In real implementation, validate against stored hash in DB
-        // For now, just generate new tokens
-
-        // Extract user info from refresh token or fetch from DB
-        // This is simplified - should validate refresh token properly
-
-        throw new RuntimeException("Refresh token validation not fully implemented");
+        // TODO: implementar validación contra token almacenado en DB
+        throw new ForbiddenException("Refresh token inválido o expirado");
     }
 
     @Override
     public void logout(String userId) {
-        // In real implementation, revoke refresh token in DB
-        // Mark token as revoked or delete it
+        // TODO: revocar refresh token en DB
     }
 
     @Override
     public UserDto createUser(String email, String password, String fullName, String role) {
         if (userRepository.existsByEmail(email)) {
-            throw new RuntimeException("Email already exists");
+            throw new ConflictException("El email ya está registrado");
         }
 
         User user = new User();
@@ -102,23 +93,12 @@ public class AuthService implements AuthUseCase {
 
     @Override
     public UserDto updateUser(String userId, String fullName, String role, Boolean active) {
-        Optional<User> userOpt = userRepository.findById(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
-        if (userOpt.isEmpty()) {
-            throw new RuntimeException("User not found");
-        }
-
-        User user = userOpt.get();
-
-        if (fullName != null) {
-            user.setFullName(fullName);
-        }
-        if (role != null) {
-            user.setRole(User.Role.valueOf(role));
-        }
-        if (active != null) {
-            user.setActive(active);
-        }
+        if (fullName != null) user.setFullName(fullName);
+        if (role != null)     user.setRole(User.Role.valueOf(role));
+        if (active != null)   user.setActive(active);
 
         User saved = userRepository.save(user);
 
@@ -127,7 +107,14 @@ public class AuthService implements AuthUseCase {
 
     @Override
     public void changePassword(String userId, String currentPassword, String newPassword) {
-        // Implementation needed
-        throw new RuntimeException("Not implemented yet");
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new ForbiddenException("Contraseña actual incorrecta");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 }

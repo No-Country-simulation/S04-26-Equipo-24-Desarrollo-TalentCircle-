@@ -15,6 +15,9 @@ spring:
 app:
   jwt:
     secret: ${JWT_SECRET}
+
+  cors:
+    allowed-origins: ${FRONTEND_URL:http://localhost:5173}
   
   llm:
     provider: ${LLM_PROVIDER:openai}

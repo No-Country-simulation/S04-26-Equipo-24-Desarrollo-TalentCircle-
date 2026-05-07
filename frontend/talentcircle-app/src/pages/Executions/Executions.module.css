@@ -1,8 +1,9 @@
 .page{padding:28px 32px;animation:fadeIn .3s ease}
+.pageHeader{display:flex;justify-content:flex-end;margin-bottom:18px}
 .tableWrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
 .table{width:100%;border-collapse:collapse}
 .th{padding:12px 18px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);background:var(--surface2)}
-.row{cursor:pointer;transition:var(--transition)}
+.row{transition:var(--transition)}
 .row:hover td{background:var(--surface2);color:var(--text)}
 .td{padding:14px 18px;font-size:13px;color:var(--text2);border-bottom:1px solid var(--border)}
 .row:last-child td{border-bottom:none}
@@ -13,3 +14,17 @@
 .statusDot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .progTrack{width:90px;height:5px;background:var(--surface3);border-radius:5px;overflow:hidden}
 .progFill{height:100%;border-radius:5px;transition:width .5s ease}
+.emptyCell{padding:32px 18px;text-align:center;font-size:13px;color:var(--text3)}
+
+/* ── Trigger button ──────────────────────────────────────────────────────── */
+.triggerBtn{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:var(--r-sm);font-size:13px;font-weight:600;cursor:pointer;border:1px solid rgba(245,166,35,.4);background:rgba(245,166,35,.1);color:var(--amber);transition:var(--transition);font-family:'Sora',sans-serif}
+.triggerBtn:hover:not(:disabled){background:rgba(245,166,35,.2);border-color:var(--amber)}
+.triggerBtn:disabled{opacity:.55;cursor:not-allowed}
+
+/* ── Skeleton ────────────────────────────────────────────────────────────── */
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.skeletonBlock{display:inline-block;background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 50%,var(--surface2) 75%);background-size:800px 100%;animation:shimmer 1.4s infinite linear;border-radius:4px}
+
+/* ── Spinner ─────────────────────────────────────────────────────────────── */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:13px;height:13px;border:2px solid rgba(245,166,35,.3);border-top-color:var(--amber);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}

@@ -15,6 +15,8 @@
 .avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--teal));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0d0f14;flex-shrink:0}
 .userInfo{flex:1;min-width:0}
 .userName{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.userRole{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace}
+.userMeta{display:flex;flex-direction:column;gap:1px}
+.userRole{font-size:10px;color:var(--amber);font-family:'DM Mono',monospace;font-weight:600}
+.userEmail{font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .logoutBtn{color:var(--text3);transition:var(--transition);display:flex;align-items:center}
 .logoutBtn:hover{color:var(--rose)}

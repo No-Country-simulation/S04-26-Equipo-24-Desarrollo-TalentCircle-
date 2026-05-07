@@ -2,13 +2,12 @@ package com.talentcircle.domain.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @MappedSuperclass
 public abstract class AuditableEntity {
 
     @Id
-    @GeneratedValue(generator = "uuid")
-    @org.hibernate.annotations.GenericGenerator(name = "uuid", strategy = "uuid2")
     private String id;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -19,6 +18,9 @@ public abstract class AuditableEntity {
 
     @PrePersist
     protected void onCreate() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID().toString();
+        }
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
