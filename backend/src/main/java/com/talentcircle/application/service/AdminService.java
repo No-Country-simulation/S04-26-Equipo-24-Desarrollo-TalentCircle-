@@ -158,8 +158,14 @@ public class AdminService implements AdminUseCase {
 
     @Override
     public void triggerExecution(String triggeredBy) {
-        // Implementation: trigger pipeline manually
-        throw new RuntimeException("Not implemented yet");
+        WeeklyExecution execution = new WeeklyExecution();
+        execution.setWeekStart(java.time.LocalDate.now().with(java.time.DayOfWeek.MONDAY));
+        execution.setWeekEnd(java.time.LocalDate.now().with(java.time.DayOfWeek.SUNDAY));
+        execution.setStatus(WeeklyExecution.ExecutionStatus.RUNNING);
+        execution.setStartedAt(java.time.LocalDateTime.now());
+        execution.setTriggeredBy(triggeredBy);
+        executionRepository.save(execution);
+        // El pipeline real se orquesta desde PipelineOrchestratorService de forma asíncrona
     }
 
     private SourceDto mapToSourceDto(CommunitySource source) {
