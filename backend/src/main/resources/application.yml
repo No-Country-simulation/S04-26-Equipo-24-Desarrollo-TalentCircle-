@@ -53,6 +53,11 @@ app:
   cors:
     allowed-origins: ${FRONTEND_URL:http://localhost:3000}
 
+  linkedin:
+    access-token: ${LINKEDIN_ACCESS_TOKEN:}
+    person-id: ${LINKEDIN_PERSON_ID:}
+    base-url: https://api.linkedin.com/v2
+
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

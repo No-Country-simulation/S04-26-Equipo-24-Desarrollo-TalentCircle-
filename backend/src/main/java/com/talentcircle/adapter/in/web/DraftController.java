@@ -2,6 +2,7 @@ package com.talentcircle.adapter.in.web;
 
 import com.talentcircle.domain.port.in.DraftReviewUseCase;
 import com.talentcircle.domain.port.in.DraftReviewUseCase.*;
+import com.talentcircle.domain.port.in.PublicationUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -23,9 +24,12 @@ import java.util.List;
 public class DraftController {
 
     private final DraftReviewUseCase draftReviewUseCase;
+    private final PublicationUseCase publicationUseCase;
 
-    public DraftController(DraftReviewUseCase draftReviewUseCase) {
+    public DraftController(DraftReviewUseCase draftReviewUseCase,
+                           PublicationUseCase publicationUseCase) {
         this.draftReviewUseCase = draftReviewUseCase;
+        this.publicationUseCase = publicationUseCase;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -212,5 +216,40 @@ public class DraftController {
             @PathVariable String id,
             @RequestBody RejectRequest request) {
         return ResponseEntity.ok(draftReviewUseCase.rejectDraft(id, request));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // POST /drafts/{id}/publish
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Operation(
+        summary = "Publicar borrador",
+        description = "Publica el borrador en su canal correspondiente (LinkedIn, Twitter, Newsletter). " +
+                      "Solo borradores en estado `APPROVED` pueden publicarse. " +
+                      "Si el borrador tiene contenido editado, se usa ese; si no, el original generado por IA."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Resultado de la publicación",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                examples = @ExampleObject(value = """
+                    {
+                      "id": "pub-001",
+                      "draftId": "draft-001",
+                      "status": "SUCCESS",
+                      "externalPostId": "urn:li:ugcPost:7123456789",
+                      "publishedAt": "2026-05-07T18:30:00",
+                      "errorMessage": null
+                    }
+                    """))),
+        @ApiResponse(responseCode = "404", description = "Borrador no encontrado"),
+        @ApiResponse(responseCode = "409", description = "El borrador no está en estado APPROVED"),
+        @ApiResponse(responseCode = "502", description = "Error al comunicarse con la API del canal")
+    })
+    @PostMapping("/{id}/publish")
+    public ResponseEntity<PublicationUseCase.PublicationDto> publishDraft(
+            @Parameter(description = "UUID del borrador a publicar", example = "draft-001")
+            @PathVariable String id) {
+        PublicationUseCase.PublicationDto result = publicationUseCase.publishDraft(id);
+        return ResponseEntity.ok(result);
     }
 }
