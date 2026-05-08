@@ -5,26 +5,23 @@ services:
     image: postgres:16-alpine
     container_name: talentcircle-postgres
     environment:
-      POSTGRES_DB: talentcircle
-      POSTGRES_USER: talentcircle
-      POSTGRES_PASSWORD: talentcircle
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: ${DB_NAME:-talentcircle}
+      POSTGRES_USER: ${DB_USER:-talentcircle}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-talentcircle}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U talentcircle"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-talentcircle} -d ${DB_NAME:-talentcircle}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - talentcircle-network
+    restart: always
 
   redis:
     image: redis:7-alpine
     container_name: talentcircle-redis
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
@@ -35,26 +32,25 @@ services:
       retries: 5
     networks:
       - talentcircle-network
+    restart: always
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ${DOCKER_HUB_USER}/talentcircle-backend:latest # Usaremos imagen de tu Docker Hub
     container_name: talentcircle-backend
     ports:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - DATABASE_URL=jdbc:postgresql://postgres:5432/talentcircle
-      - DATABASE_USER=talentcircle
-      - DATABASE_PASSWORD=talentcircle
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/${DB_NAME:-talentcircle}
+      - SPRING_DATASOURCE_USERNAME=${DB_USER:-talentcircle}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-talentcircle}
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
       - JWT_SECRET=${JWT_SECRET}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - LINKEDIN_ACCESS_TOKEN=${LINKEDIN_ACCESS_TOKEN}
       - LINKEDIN_PERSON_ID=${LINKEDIN_PERSON_ID}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
       - FRONTEND_URL=${FRONTEND_URL}
     depends_on:
       postgres:
