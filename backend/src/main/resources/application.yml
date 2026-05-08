@@ -29,11 +29,11 @@ spring:
     table: flyway_schema_history
     baseline-on-migrate: true
     validate-on-migrate: false
-
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      # Redis is disabled in dev profile via autoconfigure.exclude
 
   batch:
     job:
