@@ -114,27 +114,15 @@ public class AdminService implements AdminUseCase {
     @Override
     public UserDto createUser(CreateUserRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-<<<<<<< HEAD
             throw new RuntimeException("Email already exists: " + request.email());
         }
-=======
-            throw new RuntimeException("Email already exists");
-        }
-
->>>>>>> a1c03171d4e3b7ad8d9040286b057d228e8eedb7
         User user = new User();
         user.setEmail(request.email());
         user.setPasswordHash(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder(12)
                 .encode(request.password()));
         user.setFullName(request.fullName());
-<<<<<<< HEAD
-        user.setRole(User.Role.valueOf(request.role()));
-        user.setActive(true);
-=======
         user.setRole(User.Role.valueOf(request.role() != null ? request.role() : "EDITOR"));
         user.setActive(true);
-
->>>>>>> a1c03171d4e3b7ad8d9040286b057d228e8eedb7
         User saved = userRepository.save(user);
         return mapToUserDto(saved);
     }
