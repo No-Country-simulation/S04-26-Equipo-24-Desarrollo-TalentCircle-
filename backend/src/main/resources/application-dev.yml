@@ -2,6 +2,7 @@ server:
   port: 8080
 
 spring:
+<<<<<<< HEAD
   datasource:
     url: jdbc:h2:mem:talentcircle;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;NON_KEYWORDS=VALUE
     username: sa
@@ -15,6 +16,15 @@ spring:
       settings:
         web-allow-others: false
 
+=======
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/talentcircle
+    username: postgres
+    password: admin123
+    driver-class-name: org.postgresql.Driver
+
+>>>>>>> a1c03171d4e3b7ad8d9040286b057d228e8eedb7
   jpa:
     hibernate:
       ddl-auto: none          # Flyway manages the schema
@@ -38,8 +48,15 @@ spring:
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
       - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
 
+<<<<<<< HEAD
   cache:
     type: simple   # In-memory cache for dev (no Redis needed)
+=======
+  data:
+    redis:
+      host: localhost
+      port: 6379
+>>>>>>> a1c03171d4e3b7ad8d9040286b057d228e8eedb7
 
   batch:
     job:
@@ -47,13 +64,20 @@ spring:
 
 app:
   jwt:
+<<<<<<< HEAD
     secret: dev-secret-key-minimum-32-characters-long
     access-token-expiration: 28800000   # 8 hours
     refresh-token-expiration: 604800000 # 7 days
+=======
+    secret: my-32-character-secret-key-here-32-char
+    access-token-expiration: 28800000  # 8 hours
+    refresh-token-expiration: 604800000  # 7 days
+>>>>>>> a1c03171d4e3b7ad8d9040286b057d228e8eedb7
 
   cors:
     allowed-origins: http://localhost:3000
 
+<<<<<<< HEAD
   pipeline:
     schedule-cron: "0 0 18 * * FRI"
 
@@ -69,6 +93,16 @@ app:
   linkedin:
     access-token: ${LINKEDIN_ACCESS_TOKEN:dev-placeholder}
     person-id: ${LINKEDIN_PERSON_ID:dev-placeholder}
+=======
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    try-it-out-enabled: true
+>>>>>>> a1c03171d4e3b7ad8d9040286b057d228e8eedb7
 
 logging:
   pattern:
