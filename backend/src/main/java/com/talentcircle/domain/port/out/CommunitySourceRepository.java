@@ -9,5 +9,6 @@ import java.util.Optional;
 @Repository
 public interface CommunitySourceRepository extends JpaRepository<CommunitySource, String> {
     List<CommunitySource> findAllByActiveTrue();
+    List<CommunitySource> findByActiveTrue();
     void deleteByActiveFalse();
 }

@@ -44,6 +44,10 @@ app:
   cors:
     allowed-origins: http://localhost:5173
 
+  discord:
+    bot-token: ${DISCORD_BOT_TOKEN:}   # Poner tu token aquí o en .env
+    guild-id: ${DISCORD_GUILD_ID:}     # ID del servidor de Discord
+
 springdoc:
   api-docs:
     path: /v3/api-docs

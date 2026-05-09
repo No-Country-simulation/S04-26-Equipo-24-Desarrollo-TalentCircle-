@@ -53,6 +53,10 @@ app:
   cors:
     allowed-origins: ${FRONTEND_URL:http://localhost:5173}
 
+  discord:
+    bot-token: ${DISCORD_BOT_TOKEN:}
+    guild-id: ${DISCORD_GUILD_ID:}
+
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

@@ -4,6 +4,8 @@ import com.talentcircle.common.security.JwtAuthFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -24,12 +26,17 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final Environment environment;
+
+    @Value("${app.cors.allowed-origins}")
+    private String allowedOrigins;
 
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
 
     public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.environment = environment;
     }
 
     @Bean
@@ -47,6 +54,41 @@ public class SecurityConfig {
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        // Orígenes permitidos desde la propiedad app.cors.allowed-origins
+        // Soporta múltiples orígenes separados por coma: "http://localhost:3000,https://app.example.com"
+        List<String> origins = List.of(allowedOrigins.split(","));
+        config.setAllowedOrigins(origins.stream().map(String::trim).toList());
+
+        // Métodos HTTP permitidos
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+
+        // Headers que el frontend puede enviar (incluye Authorization para JWT)
+        config.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "X-Requested-With",
+                "Cache-Control"
+        ));
+
+        // Headers que el frontend puede leer en la respuesta
+        config.setExposedHeaders(List.of("Authorization"));
+
+        // Permite enviar cookies/credenciales (necesario para el flujo de refresh token)
+        config.setAllowCredentials(true);
+
+        // Tiempo de caché del preflight en segundos (1 hora)
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 
     @Bean

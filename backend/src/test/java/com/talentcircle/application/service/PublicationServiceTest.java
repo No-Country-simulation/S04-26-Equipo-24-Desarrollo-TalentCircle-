@@ -115,7 +115,7 @@ class PublicationServiceTest {
         testDraft.setStatus(Draft.DraftStatus.APPROVED);
         when(draftRepository.findByStatus(Draft.DraftStatus.APPROVED)).thenReturn(List.of(testDraft));
 
-        PublicationUseCase.ExportRequest request = new PublicationUseCase.ExportRequest("2026-W18", "csv");
+        PublicationUseCase.ExportRequest request = new PublicationUseCase.ExportRequest("csv", "2026-W18");
         byte[] result = publicationService.exportDrafts(request);
 
         assertNotNull(result);
@@ -129,7 +129,7 @@ class PublicationServiceTest {
         testDraft.setStatus(Draft.DraftStatus.APPROVED);
         when(draftRepository.findByStatus(Draft.DraftStatus.APPROVED)).thenReturn(List.of(testDraft));
 
-        PublicationUseCase.ExportRequest request = new PublicationUseCase.ExportRequest("2026-W18", "json");
+        PublicationUseCase.ExportRequest request = new PublicationUseCase.ExportRequest("json", "2026-W18");
         byte[] result = publicationService.exportDrafts(request);
 
         assertNotNull(result);
@@ -142,7 +142,7 @@ class PublicationServiceTest {
     void exportDrafts_shouldThrowExceptionWhenNoDraftsFound() {
         when(draftRepository.findByStatus(Draft.DraftStatus.APPROVED)).thenReturn(List.of());
 
-        PublicationUseCase.ExportRequest request = new PublicationUseCase.ExportRequest("2026-W18", "csv");
+        PublicationUseCase.ExportRequest request = new PublicationUseCase.ExportRequest("csv", "2026-W18");
 
         IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
                 publicationService.exportDrafts(request)

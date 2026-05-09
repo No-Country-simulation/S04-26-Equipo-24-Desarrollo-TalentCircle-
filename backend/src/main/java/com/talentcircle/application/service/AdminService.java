@@ -7,6 +7,7 @@ import com.talentcircle.domain.model.PipelineConfig;
 import com.talentcircle.domain.model.User;
 import com.talentcircle.domain.model.WeeklyExecution;
 import com.talentcircle.domain.port.in.AdminUseCase;
+import com.talentcircle.domain.port.in.PipelineOrchestratorUseCase;
 import com.talentcircle.domain.port.out.CommunitySourceRepository;
 import com.talentcircle.domain.port.out.PipelineConfigRepository;
 import com.talentcircle.domain.port.out.UserRepository;
@@ -26,22 +27,25 @@ public class AdminService implements AdminUseCase {
     private final PipelineConfigRepository configRepository;
     private final UserRepository userRepository;
     private final WeeklyExecutionRepository executionRepository;
+    private final PipelineOrchestratorUseCase pipelineOrchestrator;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
     public AdminService(CommunitySourceRepository sourceRepository,
                         PipelineConfigRepository configRepository,
                         UserRepository userRepository,
-                        WeeklyExecutionRepository executionRepository) {
+                        WeeklyExecutionRepository executionRepository,
+                        PipelineOrchestratorUseCase pipelineOrchestrator) {
         this.sourceRepository = sourceRepository;
         this.configRepository = configRepository;
         this.userRepository = userRepository;
         this.executionRepository = executionRepository;
+        this.pipelineOrchestrator = pipelineOrchestrator;
     }
 
     @Override
     public List<SourceDto> getSources() {
+        // Devuelve todas (activas e inactivas) para que el toggle del panel funcione
         return sourceRepository.findAll().stream()
-                .filter(CommunitySource::isActive)
                 .map(this::mapToSourceDto)
                 .collect(Collectors.toList());
     }
@@ -154,8 +158,7 @@ public class AdminService implements AdminUseCase {
 
     @Override
     public void triggerExecution(String triggeredBy) {
-        // TODO: implementar disparo manual del pipeline
-        throw new UnsupportedOperationException("Trigger manual no implementado aún");
+        pipelineOrchestrator.runWeeklyPipeline(triggeredBy);
     }
 
     // ── Mappers ───────────────────────────────────────────────────────────────

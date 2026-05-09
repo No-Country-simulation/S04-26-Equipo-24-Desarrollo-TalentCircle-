@@ -35,6 +35,8 @@ logs/
 .env
 application-local.yml
 application-local.properties
+application-dev.yml
+application-dev.properties
 
 # Temp files
 docx_temp/

@@ -48,10 +48,9 @@ public class PipelineOrchestratorService implements PipelineOrchestratorUseCase 
         String executionId = execution.getId();
 
         try {
-            // Step 1: Collect activities from all active sources
-            // In real implementation: fetch all active sources and collect from each
-            // For now, assuming a default source ID
-            communityCollectorUseCase.collectActivity(executionId, "source-123");
+            // Step 1: Collect activities from all active sources (Discord, Circle, Slack)
+            ((CommunityCollectorService) communityCollectorUseCase)
+                    .collectFromAllActiveSources(executionId);
 
             // Step 2: Analyze activities with AI
             aiAnalyzerUseCase.analyzeActivity(executionId, "Analyze these activities for content generation");
@@ -87,9 +86,9 @@ public class PipelineOrchestratorService implements PipelineOrchestratorUseCase 
         execution = executionRepository.save(execution);
 
         try {
-            // Retry the pipeline from the beginning
-            // Step 1: Collect activities
-            communityCollectorUseCase.collectActivity(executionId, "source-123");
+            // Retry: recolectar de todas las fuentes activas
+            ((CommunityCollectorService) communityCollectorUseCase)
+                    .collectFromAllActiveSources(executionId);
 
             // Step 2: Analyze with AI
             aiAnalyzerUseCase.analyzeActivity(executionId, "Analyze these activities for content generation");
