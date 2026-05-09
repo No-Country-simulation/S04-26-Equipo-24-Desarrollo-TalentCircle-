@@ -155,6 +155,20 @@
             <artifactId>opencsv</artifactId>
             <version>${opencsv.version}</version>
         </dependency>
+
+        <!-- JDA — Java Discord API -->
+        <dependency>
+            <groupId>net.dv8tion</groupId>
+            <artifactId>JDA</artifactId>
+            <version>5.2.1</version>
+            <exclusions>
+                <!-- Excluir opus-java para reducir tamaño (no necesitamos audio) -->
+                <exclusion>
+                    <groupId>club.minnced</groupId>
+                    <artifactId>opus-java</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         
         <!-- Jackson for Java 21 -->
         <dependency>

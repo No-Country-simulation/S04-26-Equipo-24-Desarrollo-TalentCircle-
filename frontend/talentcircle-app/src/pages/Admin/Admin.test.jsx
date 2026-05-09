@@ -289,6 +289,7 @@ it('calls createUser and refreshes users list when new user form is submitted', 
   // Fill form
   fireEvent.change(screen.getByPlaceholderText('Nombre Apellido'), { target: { value: 'Ana García' } })
   fireEvent.change(screen.getByPlaceholderText('usuario@talentcircle.com'), { target: { value: 'ana@tc.com' } })
+  fireEvent.change(screen.getByPlaceholderText('Mínimo 8 caracteres'), { target: { value: 'Password123!' } })
 
   // Submit using the submit button inside the modal
   const submitBtn = screen.getByRole('button', { name: 'Crear usuario' })
@@ -354,7 +355,9 @@ it('calls createSource and refreshes sources list when new source form is submit
   fireEvent.click(screen.getByTestId('add-source-btn'))
   expect(screen.getByRole('heading', { name: 'Agregar fuente' })).toBeInTheDocument()
 
-  // Fill form
+  // Fill form — tipo DISCORD por defecto, cambiar a SLACK para evitar campos requeridos de Discord
+  const typeSelect = screen.getByRole('combobox', { name: /tipo/i })
+  fireEvent.change(typeSelect, { target: { value: 'SLACK' } })
   fireEvent.change(screen.getByPlaceholderText('Nombre de la fuente'), { target: { value: 'Slack – Recursos' } })
 
   // Submit using the submit button inside the modal overlay

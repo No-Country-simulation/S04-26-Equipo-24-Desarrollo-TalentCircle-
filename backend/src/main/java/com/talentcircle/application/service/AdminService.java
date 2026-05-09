@@ -7,6 +7,7 @@ import com.talentcircle.domain.model.PipelineConfig;
 import com.talentcircle.domain.model.User;
 import com.talentcircle.domain.model.WeeklyExecution;
 import com.talentcircle.domain.port.in.AdminUseCase;
+import com.talentcircle.domain.port.in.PipelineOrchestratorUseCase;
 import com.talentcircle.domain.port.out.CommunitySourceRepository;
 import com.talentcircle.domain.port.out.PipelineConfigRepository;
 import com.talentcircle.domain.port.out.UserRepository;
@@ -26,22 +27,25 @@ public class AdminService implements AdminUseCase {
     private final PipelineConfigRepository configRepository;
     private final UserRepository userRepository;
     private final WeeklyExecutionRepository executionRepository;
+    private final PipelineOrchestratorUseCase pipelineOrchestrator;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
     public AdminService(CommunitySourceRepository sourceRepository,
                         PipelineConfigRepository configRepository,
                         UserRepository userRepository,
-                        WeeklyExecutionRepository executionRepository) {
+                        WeeklyExecutionRepository executionRepository,
+                        PipelineOrchestratorUseCase pipelineOrchestrator) {
         this.sourceRepository = sourceRepository;
         this.configRepository = configRepository;
         this.userRepository = userRepository;
         this.executionRepository = executionRepository;
+        this.pipelineOrchestrator = pipelineOrchestrator;
     }
 
     @Override
     public List<SourceDto> getSources() {
+        // Devuelve todas (activas e inactivas) para que el toggle del panel funcione
         return sourceRepository.findAll().stream()
-                .filter(CommunitySource::isActive)
                 .map(this::mapToSourceDto)
                 .collect(Collectors.toList());
     }
@@ -113,25 +117,17 @@ public class AdminService implements AdminUseCase {
     @Override
     public UserDto createUser(CreateUserRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-<<<<<<< HEAD
-            throw new RuntimeException("Email already exists: " + request.email());
-=======
             throw new ConflictException("El email ya está registrado");
->>>>>>> d8921cd (integracion del frontend con el backend, estapa de loggin)
         }
+
         User user = new User();
         user.setEmail(request.email());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setFullName(request.fullName());
         user.setRole(User.Role.valueOf(request.role() != null ? request.role() : "EDITOR"));
         user.setActive(true);
-<<<<<<< HEAD
-        User saved = userRepository.save(user);
-        return mapToUserDto(saved);
-=======
 
         return mapToUserDto(userRepository.save(user));
->>>>>>> d8921cd (integracion del frontend con el backend, estapa de loggin)
     }
 
     @Override
@@ -162,14 +158,7 @@ public class AdminService implements AdminUseCase {
 
     @Override
     public void triggerExecution(String triggeredBy) {
-<<<<<<< HEAD
-        // Delegated to PipelineOrchestratorService via ExecutionController
-        // This method is kept for interface compliance; actual trigger goes through the orchestrator
-        throw new UnsupportedOperationException("Use ExecutionController.triggerExecution which calls PipelineOrchestratorUseCase directly");
-=======
-        // TODO: implementar disparo manual del pipeline
-        throw new UnsupportedOperationException("Trigger manual no implementado aún");
->>>>>>> d8921cd (integracion del frontend con el backend, estapa de loggin)
+        pipelineOrchestrator.runWeeklyPipeline(triggeredBy);
     }
 
     // ── Mappers ───────────────────────────────────────────────────────────────

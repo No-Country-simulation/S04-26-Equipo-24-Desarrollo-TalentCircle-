@@ -29,11 +29,11 @@ spring:
     table: flyway_schema_history
     baseline-on-migrate: true
     validate-on-migrate: false
+
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      # Redis is disabled in dev profile via autoconfigure.exclude
 
   batch:
     job:
@@ -44,9 +44,6 @@ spring:
     virtual:
       enabled: true
 
-  scheduling:
-    enabled: true
-
 app:
   jwt:
     secret: ${JWT_SECRET:my-32-character-secret-key-here-32-char}
@@ -56,23 +53,9 @@ app:
   cors:
     allowed-origins: ${FRONTEND_URL:http://localhost:5173}
 
-  pipeline:
-    schedule-cron: ${PIPELINE_SCHEDULE_CRON:0 0 18 * * FRI}
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
-  endpoint:
-    health:
-      show-details: when-authorized
-    prometheus:
-      enabled: true
-  metrics:
-    export:
-      prometheus:
-        enabled: true
+  discord:
+    bot-token: ${DISCORD_BOT_TOKEN:}
+    guild-id: ${DISCORD_GUILD_ID:}
 
 logging:
   pattern:
