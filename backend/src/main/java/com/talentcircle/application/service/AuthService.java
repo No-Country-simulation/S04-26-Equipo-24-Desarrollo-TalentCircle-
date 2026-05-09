@@ -62,33 +62,11 @@ public class AuthService implements AuthUseCase {
     @Override
     public LoginResponse refresh(RefreshRequest request) {
         if (!jwtService.isValid(request.refreshToken())) {
-<<<<<<< HEAD
-            throw new RuntimeException("Invalid or expired refresh token");
-        }
-        // Extract userId from refresh token subject
-        String userId = jwtService.extractUserId(request.refreshToken());
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isEmpty()) {
-            throw new RuntimeException("User not found for refresh token");
-        }
-        User user = userOpt.get();
-        if (!user.isActive()) {
-            throw new RuntimeException("User is inactive");
-        }
-        String newAccessToken = jwtService.generateAccessToken(user.getId(), user.getRole().name());
-        String newRefreshToken = jwtService.generateRefreshToken();
-        return new LoginResponse(
-                newAccessToken,
-                newRefreshToken,
-                "28800000",
-                new UserDto(user.getId(), user.getEmail(), user.getFullName(), user.getRole().name())
-        );
-=======
             throw new ForbiddenException("Refresh token inválido o expirado");
         }
         // TODO: implementar validación contra token almacenado en DB
         throw new ForbiddenException("Refresh token inválido o expirado");
->>>>>>> d8921cd (integracion del frontend con el backend, estapa de loggin)
+
     }
 
     @Override
@@ -131,19 +109,12 @@ public class AuthService implements AuthUseCase {
     @Override
     public void changePassword(String userId, String currentPassword, String newPassword) {
         User user = userRepository.findById(userId)
-<<<<<<< HEAD
-                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
-        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
-            throw new RuntimeException("Current password is incorrect");
-        }
-=======
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
         if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
             throw new ForbiddenException("Contraseña actual incorrecta");
         }
 
->>>>>>> d8921cd (integracion del frontend con el backend, estapa de loggin)
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
