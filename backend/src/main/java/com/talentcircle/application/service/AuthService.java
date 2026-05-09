@@ -48,7 +48,7 @@ public class AuthService implements AuthUseCase {
         }
 
         String accessToken = jwtService.generateAccessToken(user.getId(), user.getRole().name());
-        String refreshToken = jwtService.generateRefreshToken();
+        String refreshToken = jwtService.generateRefreshToken(user.getId());
 
         // Store refresh token hash in user entity (in real implementation, store in separate table)
         // For now, we'll just return it
@@ -77,7 +77,7 @@ public class AuthService implements AuthUseCase {
             throw new RuntimeException("User is inactive");
         }
         String newAccessToken = jwtService.generateAccessToken(user.getId(), user.getRole().name());
-        String newRefreshToken = jwtService.generateRefreshToken();
+        String newRefreshToken = jwtService.generateRefreshToken(user.getId());
         return new LoginResponse(
                 newAccessToken,
                 newRefreshToken,
