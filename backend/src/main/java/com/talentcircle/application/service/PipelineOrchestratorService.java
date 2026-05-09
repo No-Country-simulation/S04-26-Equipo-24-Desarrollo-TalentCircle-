@@ -49,8 +49,7 @@ public class PipelineOrchestratorService implements PipelineOrchestratorUseCase 
 
         try {
             // Step 1: Collect activities from all active sources (Discord, Circle, Slack)
-            ((CommunityCollectorService) communityCollectorUseCase)
-                    .collectFromAllActiveSources(executionId);
+            communityCollectorUseCase.collectFromAllActiveSources(executionId);
 
             // Step 2: Analyze activities with AI
             aiAnalyzerUseCase.analyzeActivity(executionId, "Analyze these activities for content generation");
@@ -87,8 +86,7 @@ public class PipelineOrchestratorService implements PipelineOrchestratorUseCase 
 
         try {
             // Retry: recolectar de todas las fuentes activas
-            ((CommunityCollectorService) communityCollectorUseCase)
-                    .collectFromAllActiveSources(executionId);
+            communityCollectorUseCase.collectFromAllActiveSources(executionId);
 
             // Step 2: Analyze with AI
             aiAnalyzerUseCase.analyzeActivity(executionId, "Analyze these activities for content generation");
