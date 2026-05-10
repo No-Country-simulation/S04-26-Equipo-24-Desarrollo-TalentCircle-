@@ -17,3 +17,4 @@
 @keyframes spin{to{transform:rotate(360deg)}}
 .hint{text-align:center;margin-top:22px;font-size:12px;color:var(--text3)}
 .hint code{color:var(--amber);font-family:'DM Mono',monospace;background:var(--amber-glow);padding:2px 5px;border-radius:4px}
+.btnLoginDisabled { background: var(--surface-2, #2a2f48); color: var(--text3, #6b7280); box-shadow: none; cursor: not-allowed; }

@@ -11,7 +11,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
@@ -33,7 +33,7 @@ spring:
 
   batch:
     job:
-      enabled: false
+      enabled: true
 
 app:
   jwt:
@@ -45,8 +45,8 @@ app:
     allowed-origins: http://localhost:5173
 
   discord:
-    bot-token: ${DISCORD_BOT_TOKEN:}   # Poner tu token aquí o en .env
-    guild-id: ${DISCORD_GUILD_ID:}     # ID del servidor de Discord
+    bot-token: ${DISCORD_BOT_TOKEN:}
+    guild-id: ${DISCORD_GUILD_ID:}
 
 springdoc:
   api-docs:
@@ -64,3 +64,6 @@ logging:
     com.talentcircle: DEBUG
     org.springframework: INFO
     org.hibernate: INFO
+
+
+

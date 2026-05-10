@@ -25,6 +25,8 @@ export default function Login() {
     }
   }
 
+  const isFormValid = email.trim().length > 0 && password.trim().length > 0
+
   return (
     <div className={styles.page}>
       <div className={styles.bg}>
@@ -65,7 +67,11 @@ export default function Login() {
           />
         </div>
 
-        <button type="submit" className={styles.btnLogin} disabled={loading}>
+        <button
+          type="submit"
+          className={`${styles.btnLogin} ${!isFormValid && !loading ? styles.btnLoginDisabled : ''}`}
+          disabled={loading || !isFormValid}
+        >
           {loading ? <span className={styles.spinner} /> : 'Ingresar al panel →'}
         </button>
       </form>
