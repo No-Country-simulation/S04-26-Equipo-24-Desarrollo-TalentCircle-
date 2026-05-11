@@ -1,27 +1,24 @@
-# ETAPA 1: Construcción (Usamos una imagen de Maven que soporta ARM64 nativo)
-FROM maven:3.9-eclipse-temurin-21 AS build
+# Etapa 1: Build con Maven y Java 21
+FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 
-# Copiamos solo el pom.xml para cachear dependencias
+# Copiar el pom y descargar dependencias (para aprovechar el cache de Docker)
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
+RUN mvn dependency:go-offline
 
-# Copiamos el código y compilamos
+# Copiar el código fuente y compilar
 COPY src ./src
-RUN mvn clean package -DskipTests -B
+RUN mvn clean package -DskipTests
 
-# ETAPA 2: Imagen Final (Ligera y optimizada)
+# Etapa 2: Imagen de ejecución ligera
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Copiamos el JAR generado
+# Copiar el jar desde la etapa de compilación
 COPY --from=build /app/target/*.jar app.jar
 
-# Configuración de usuario no-root por seguridad
-RUN addgroup -S talentcircle && adduser -S talentcircle -G talentcircle
-USER talentcircle
-
+# Exponer el puerto
 EXPOSE 8080
 
-# Forzamos parámetros de JVM optimizados para contenedores
-ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
+# Comando de arranque con perfil docker
+ENTRYPOINT ["java", "-Dspring.profiles.active=docker", "-jar", "app.jar"]
