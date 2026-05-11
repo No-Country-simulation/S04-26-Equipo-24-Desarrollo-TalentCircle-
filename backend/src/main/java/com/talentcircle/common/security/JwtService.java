@@ -34,8 +34,9 @@ public class JwtService {
                 .compact();
     }
 
-    public String generateRefreshToken() {
+    public String generateRefreshToken(String userId) {
         return Jwts.builder()
+                .subject(userId)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
                 .signWith(getSigningKey())
