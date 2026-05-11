@@ -81,6 +81,7 @@
             <artifactId>flyway-core</artifactId>
             <version>10.20.1</version>
         </dependency>
+
         
         <!-- Messaging -->
         <dependency>

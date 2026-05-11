@@ -17,7 +17,7 @@ INSERT INTO users (id, email, password_hash, full_name, role, active)
 VALUES (
            '550e8400-e29b-41d4-a716-446655440000',
            'admin@talentcircle.com',
-           '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00DMxs.7uSyLnS',
+           '$2a$12$XuH7VoaQTygvcTOioo6S.OtkHNldGsIwwq1cJGBoQMXuZuR6Ux.Wy',
            'Admin Ramon Valdez',
            'ADMIN',
            true
