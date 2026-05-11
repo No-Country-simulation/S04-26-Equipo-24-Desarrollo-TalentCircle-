@@ -25,3 +25,4 @@ USER talentcircle
 EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
+# sistema simpe para arquitecturas amd64 o x86 
