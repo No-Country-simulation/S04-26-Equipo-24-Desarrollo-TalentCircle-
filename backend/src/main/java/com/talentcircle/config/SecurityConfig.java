@@ -1,6 +1,7 @@
 package com.talentcircle.config;
 
 import com.talentcircle.common.security.JwtAuthFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -13,7 +14,11 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -22,6 +27,9 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final Environment environment;
+
+    @Value("${app.cors.allowed-origins}")
+    private String allowedOrigins;
 
     public SecurityConfig(JwtAuthFilter jwtAuthFilter, Environment environment) {
         this.jwtAuthFilter = jwtAuthFilter;
@@ -33,9 +41,9 @@ public class SecurityConfig {
         boolean isDevProfile = environment.acceptsProfiles(Profiles.of("dev"));
 
         http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> {
                 if (isDevProfile) {
-                    // H2 console requires CSRF disabled for its POST requests
                     csrf.ignoringRequestMatchers("/h2-console/**").disable();
                 } else {
                     csrf.disable();
@@ -45,7 +53,6 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> {
                 if (isDevProfile) {
-                    // Allow H2 console only in dev
                     auth.requestMatchers("/h2-console/**").permitAll();
                 }
                 auth
@@ -59,12 +66,39 @@ public class SecurityConfig {
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         if (isDevProfile) {
-            // H2 console runs inside an iframe — must allow same-origin frames in dev
             http.headers(headers ->
                 headers.frameOptions(frame -> frame.sameOrigin()));
         }
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        List<String> origins = List.of(allowedOrigins.split(","));
+        config.setAllowedOrigins(origins.stream().map(String::trim).toList());
+
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+
+        config.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "X-Requested-With",
+                "Cache-Control"
+        ));
+
+        config.setExposedHeaders(List.of("Authorization"));
+
+        config.setAllowCredentials(true);
+
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 
     @Bean

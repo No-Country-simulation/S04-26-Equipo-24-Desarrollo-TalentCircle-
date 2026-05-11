@@ -1,6 +1,5 @@
 package com.talentcircle.common.security;
 
-import com.talentcircle.common.exception.ForbiddenException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,29 +27,38 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
 
+        // Ignorar si no hay header o el token está vacío tras "Bearer "
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        final String jwt = authHeader.substring(7);
+        final String jwt = authHeader.substring(7).trim();
+
+        if (jwt.isEmpty()) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Validar primero — evita MalformedJwtException en extractUserId
+        if (!jwtService.isValid(jwt)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         final String userId = jwtService.extractUserId(jwt);
 
         if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            if (jwtService.isValid(jwt)) {
-                String role = jwtService.extractRole(jwt);
+            String role = jwtService.extractRole(jwt);
 
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userId,
-                        null,
-                        java.util.Collections.singletonList(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + role))
-                );
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                    userId,
+                    null,
+                    java.util.Collections.singletonList(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + role))
+            );
 
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            } else {
-                throw new ForbiddenException("Invalid or expired JWT token");
-            }
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authToken);
         }
 
         filterChain.doFilter(request, response);

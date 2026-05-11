@@ -1,0 +1,69 @@
+server:
+  port: 8080
+
+spring:
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/talentcircle
+    username: postgres
+    password: admin123
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+
+  flyway:
+    enabled: false
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: false
+    table: flyway_schema_history
+
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  batch:
+    job:
+      enabled: true
+
+app:
+  jwt:
+    secret: my-32-character-secret-key-here-32-char
+    access-token-expiration: 28800000  # 8 hours
+    refresh-token-expiration: 604800000  # 7 days
+
+  cors:
+    allowed-origins: http://localhost:5173
+
+  discord:
+    bot-token: ${DISCORD_BOT_TOKEN:}
+    guild-id: ${DISCORD_GUILD_ID:}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    try-it-out-enabled: true
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  level:
+    com.talentcircle: DEBUG
+    org.springframework: INFO
+    org.hibernate: INFO
+
+
+

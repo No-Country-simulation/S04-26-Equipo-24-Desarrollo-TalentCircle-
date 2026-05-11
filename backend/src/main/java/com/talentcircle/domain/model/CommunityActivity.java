@@ -41,6 +41,12 @@ public class CommunityActivity extends AuditableEntity {
     @Column(name = "source_url")
     private String sourceUrl;
 
+    @Column(name = "discord_message_id", unique = true)
+    private String discordMessageId;
+
+    @Column(name = "discord_channel_id")
+    private String discordChannelId;
+
     public enum ActivityType {
         POST, QUESTION, RESOURCE
     }
@@ -132,5 +138,21 @@ public class CommunityActivity extends AuditableEntity {
 
     public void setSourceUrl(String sourceUrl) {
         this.sourceUrl = sourceUrl;
+    }
+
+    public String getDiscordMessageId() {
+        return discordMessageId;
+    }
+
+    public void setDiscordMessageId(String discordMessageId) {
+        this.discordMessageId = discordMessageId;
+    }
+
+    public String getDiscordChannelId() {
+        return discordChannelId;
+    }
+
+    public void setDiscordChannelId(String discordChannelId) {
+        this.discordChannelId = discordChannelId;
     }
 }
