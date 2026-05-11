@@ -75,24 +75,20 @@
         </dependency>
         
         <!-- Databases -->
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <scope>runtime</scope>
-        </dependency>
 
-        <!-- H2 for local development (profile: dev) -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
+
         
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
-            <version>10.15.0</version>
+            <version>10.20.1</version>
         </dependency>
+
         
         <!-- Messaging -->
         <dependency>

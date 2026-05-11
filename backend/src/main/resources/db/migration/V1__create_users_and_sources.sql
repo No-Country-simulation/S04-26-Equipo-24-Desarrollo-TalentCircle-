@@ -13,6 +13,15 @@ CREATE TABLE users (
 );
 
 CREATE INDEX idx_users_email ON users(email);
+INSERT INTO users (id, email, password_hash, full_name, role, active)
+VALUES (
+           '550e8400-e29b-41d4-a716-446655440000',
+           'admin@talentcircle.com',
+           '$2a$12$XuH7VoaQTygvcTOioo6S.OtkHNldGsIwwq1cJGBoQMXuZuR6Ux.Wy',
+           'Admin Ramon Valdez',
+           'ADMIN',
+           true
+       );
 
 -- Create community_sources table
 CREATE TABLE community_sources (

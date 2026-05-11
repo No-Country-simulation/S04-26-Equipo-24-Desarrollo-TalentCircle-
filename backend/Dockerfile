@@ -1,28 +1,24 @@
-FROM maven:3.9-eclipse-temurin-21 AS build
+# Etapa 1: Build con Maven y Java 21
+FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 
-# Copy pom.xml and download dependencies (leverage Docker cache)
+# Copiar el pom y descargar dependencias (para aprovechar el cache de Docker)
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
+RUN mvn dependency:go-offline
 
-# Copy source code
+# Copiar el código fuente y compilar
 COPY src ./src
+RUN mvn clean package -DskipTests
 
-# Build the application
-RUN mvn clean package -DskipTests -B
-
-# Final image
+# Etapa 2: Imagen de ejecución ligera
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Copy the built artifact
+# Copiar el jar desde la etapa de compilación
 COPY --from=build /app/target/*.jar app.jar
 
-# Create a non-root user
-RUN addgroup -S talentcircle && adduser -S talentcircle -G talentcircle
-USER talentcircle
-
+# Exponer el puerto
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
-# sistema simpe para arquitecturas amd64 o x86 
+# Comando de arranque con perfil docker
+ENTRYPOINT ["java", "-Dspring.profiles.active=docker", "-jar", "app.jar"]

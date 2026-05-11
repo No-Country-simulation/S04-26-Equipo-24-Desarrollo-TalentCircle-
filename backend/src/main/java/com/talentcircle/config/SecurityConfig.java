@@ -41,8 +41,11 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // Permitir frames para que la consola de H2 no de error de "Connection Refused"
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/webhooks/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
@@ -56,30 +59,21 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Orígenes permitidos desde la propiedad app.cors.allowed-origins
-        // Soporta múltiples orígenes separados por coma: "http://localhost:3000,https://app.example.com"
-        List<String> origins = List.of(allowedOrigins.split(","));
-        config.setAllowedOrigins(origins.stream().map(String::trim).toList());
+        // 1. Permitir CUALQUIER origen sin depender del application.yml
+        config.setAllowedOriginPatterns(List.of("*"));
 
-        // Métodos HTTP permitidos
+        // 2. Todos los métodos para que el front fluya
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
-        // Headers que el frontend puede enviar (incluye Authorization para JWT)
-        config.setAllowedHeaders(List.of(
-                "Authorization",
-                "Content-Type",
-                "Accept",
-                "X-Requested-With",
-                "Cache-Control"
-        ));
+        // 3. Permitir todos los headers (evita líos con Content-Type o Custom Headers)
+        config.setAllowedHeaders(List.of("*"));
 
-        // Headers que el frontend puede leer en la respuesta
+        // 4. Exponer Authorization para que el front pueda guardar el Token
         config.setExposedHeaders(List.of("Authorization"));
 
-        // Permite enviar cookies/credenciales (necesario para el flujo de refresh token)
-        config.setAllowCredentials(true);
+        // 5. IMPORTANTE: En modo abierto total con patterns "*", esto debe ser false
+        config.setAllowCredentials(false);
 
-        // Tiempo de caché del preflight en segundos (1 hora)
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

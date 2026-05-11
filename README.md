@@ -655,7 +655,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -676,7 +676,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: frontend/talentcircle-app/Dockerfile
       args:
         VITE_API_BASE_URL: http://localhost:8080/api/v1
     ports:
