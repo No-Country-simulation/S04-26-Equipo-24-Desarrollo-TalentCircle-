@@ -66,6 +66,7 @@ public class AuthService implements AuthUseCase {
         }
         // TODO: implementar validación contra token almacenado en DB
         throw new ForbiddenException("Refresh token inválido o expirado");
+
     }
 
     @Override

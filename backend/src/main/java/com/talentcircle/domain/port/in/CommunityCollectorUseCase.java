@@ -4,6 +4,7 @@ import java.util.List;
 
 public interface CommunityCollectorUseCase {
     void collectActivity(String executionId, String sourceId);
+    void collectFromAllActiveSources(String executionId);
     List<CommunityActivityDto> getActivitiesByExecution(String executionId);
 
     record CommunityActivityDto(

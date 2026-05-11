@@ -90,7 +90,7 @@ export const getExecutions = () =>
  */
 export const triggerExecution = (email) =>
   apiClient
-    .post('/api/v1/admin/executions/trigger', { triggeredBy: email })
+    .post(`/api/v1/admin/executions/trigger?triggeredBy=${encodeURIComponent(email)}`)
     .then(() => undefined)
 
 const adminApi = {

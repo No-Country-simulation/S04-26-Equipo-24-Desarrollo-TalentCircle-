@@ -64,3 +64,6 @@ logging:
     com.talentcircle: DEBUG
     org.springframework: INFO
     org.hibernate: INFO
+
+
+

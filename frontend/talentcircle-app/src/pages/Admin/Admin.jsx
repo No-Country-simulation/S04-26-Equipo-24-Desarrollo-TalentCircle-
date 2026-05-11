@@ -207,7 +207,7 @@ function EditUserModal({ user, onClose, onSave }) {
 
 // ─── New Source Modal ─────────────────────────────────────────────────────────
 function NewSourceModal({ onClose, onSave }) {
-  const [form, setForm] = useState({ name: '', type: 'DISCORD', active: true })
+  const [form, setForm] = useState({ name: '', type: 'DISCORD', apiUrl: '', apiKey: '', active: true })
   const [saving, setSaving] = useState(false)
 
   const handleSubmit = async (e) => {
@@ -221,14 +221,18 @@ function NewSourceModal({ onClose, onSave }) {
     }
   }
 
+  const isDiscord = form.type === 'DISCORD'
+
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <h3 className={styles.modalTitle}>Agregar fuente</h3>
         <form onSubmit={handleSubmit}>
           <div className="field">
-            <label>Nombre</label>
+            <label htmlFor="src-name">Nombre</label>
             <input
+              id="src-name"
+              name="name"
               required
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -236,13 +240,77 @@ function NewSourceModal({ onClose, onSave }) {
             />
           </div>
           <div className="field">
-            <label>Tipo</label>
-            <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+            <label htmlFor="src-type">Tipo</label>
+            <select
+              id="src-type"
+              name="type"
+              value={form.type}
+              onChange={(e) => setForm({ ...form, type: e.target.value, apiUrl: '', apiKey: '' })}
+            >
               <option value="DISCORD">Discord</option>
               <option value="CIRCLE">Circle</option>
               <option value="SLACK">Slack</option>
             </select>
           </div>
+
+          {/* Campos específicos por tipo */}
+          {isDiscord && (
+            <>
+              <div className="field">
+                <label htmlFor="src-apiurl">Guild ID (ID del servidor Discord)</label>
+                <input
+                  id="src-apiurl"
+                  name="apiUrl"
+                  required
+                  value={form.apiUrl}
+                  onChange={(e) => setForm({ ...form, apiUrl: e.target.value })}
+                  placeholder="123456789012345678"
+                  style={{ fontFamily: "'DM Mono',monospace" }}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="src-apikey">Bot Token</label>
+                <input
+                  id="src-apikey"
+                  name="apiKey"
+                  type="password"
+                  required
+                  value={form.apiKey}
+                  onChange={(e) => setForm({ ...form, apiKey: e.target.value })}
+                  placeholder="Bot MTxxxxxxxxxxxxxxxx..."
+                  autoComplete="off"
+                />
+              </div>
+            </>
+          )}
+
+          {(form.type === 'CIRCLE' || form.type === 'SLACK') && (
+            <>
+              <div className="field">
+                <label htmlFor="src-apiurl">URL de la API</label>
+                <input
+                  id="src-apiurl"
+                  name="apiUrl"
+                  value={form.apiUrl}
+                  onChange={(e) => setForm({ ...form, apiUrl: e.target.value })}
+                  placeholder="https://api.example.com"
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="src-apikey">API Key / Token</label>
+                <input
+                  id="src-apikey"
+                  name="apiKey"
+                  type="password"
+                  value={form.apiKey}
+                  onChange={(e) => setForm({ ...form, apiKey: e.target.value })}
+                  placeholder="Token de acceso"
+                  autoComplete="off"
+                />
+              </div>
+            </>
+          )}
+
           <div className={styles.modalActions}>
             <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
             <button type="submit" className="btn btn-green" disabled={saving}>

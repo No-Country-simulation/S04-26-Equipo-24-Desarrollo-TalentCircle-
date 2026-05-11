@@ -3,13 +3,15 @@ package com.talentcircle.application.service;
 import com.talentcircle.domain.model.Draft;
 import com.talentcircle.domain.port.in.DraftReviewUseCase;
 import com.talentcircle.domain.port.out.DraftRepository;
-import com.talentcircle.domain.port.out.WeeklyExecutionRepository;
+import com.talentcircle.domain.port.out.DraftSourceRepository;
+import com.talentcircle.domain.port.out.DraftVersionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,83 +25,94 @@ class DraftReviewServiceTest {
     private DraftRepository draftRepository;
 
     @Mock
-    private WeeklyExecutionRepository executionRepository;
+    private DraftVersionRepository versionRepository;
+
+    @Mock
+    private DraftSourceRepository sourceRepository;
 
     private DraftReviewService draftReviewService;
 
     @BeforeEach
     void setUp() {
-        draftReviewService = new DraftReviewService(draftRepository, executionRepository);
+        draftReviewService = new DraftReviewService(draftRepository, versionRepository, sourceRepository);
     }
 
     @Test
-    void getDraftDetail_ShouldReturnDraft_WhenDraftExists() {
-        // Given
-        Draft draft = new Draft();
-        draft.setId("123");
-        draft.setStatus(Draft.DraftStatus.PENDING);
-        draft.setContent("Test content");
+    void approveDraft_withPendingDraft_changesStatusToApproved() {
+        Draft draft = buildDraft(Draft.DraftStatus.PENDING);
+        when(draftRepository.findById("draft-1")).thenReturn(Optional.of(draft));
+        when(draftRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(sourceRepository.findByDraftId("draft-1")).thenReturn(List.of());
+        when(versionRepository.findByDraftIdOrderByVersionNumberAsc("draft-1")).thenReturn(List.of());
 
-        when(draftRepository.findById("123")).thenReturn(Optional.of(draft));
+        DraftReviewUseCase.DraftDetailDto result = draftReviewService.approveDraft("draft-1");
 
-        // When
-        DraftReviewUseCase.DraftDetailDto result = draftReviewService.getDraftDetail("123");
-
-        // Then
-        assertNotNull(result);
-        assertEquals("123", result.id());
-        assertEquals("PENDING", result.status());
-        assertEquals("Test content", result.content());
-    }
-
-    @Test
-    void approveDraft_ShouldChangeStatusToApproved_WhenDraftIsPending() {
-        // Given
-        Draft draft = new Draft();
-        draft.setId("123");
-        draft.setStatus(Draft.DraftStatus.PENDING);
-
-        when(draftRepository.findById("123")).thenReturn(Optional.of(draft));
-        when(draftRepository.save(any(Draft.class))).thenReturn(draft);
-
-        // When
-        DraftReviewUseCase.DraftDetailDto result = draftReviewService.approveDraft("123");
-
-        // Then
         assertEquals("APPROVED", result.status());
-        verify(draftRepository).save(draft);
+        verify(draftRepository).save(any(Draft.class));
     }
 
     @Test
-    void approveDraft_ShouldThrowException_WhenDraftIsNotPending() {
-        // Given
-        Draft draft = new Draft();
-        draft.setId("123");
-        draft.setStatus(Draft.DraftStatus.APPROVED);
+    void approveDraft_withAlreadyApprovedDraft_throwsException() {
+        Draft draft = buildDraft(Draft.DraftStatus.APPROVED);
+        when(draftRepository.findById("draft-1")).thenReturn(Optional.of(draft));
 
-        when(draftRepository.findById("123")).thenReturn(Optional.of(draft));
-
-        // When & Then
-        assertThrows(RuntimeException.class, () -> draftReviewService.approveDraft("123"));
+        assertThrows(IllegalStateException.class, () -> draftReviewService.approveDraft("draft-1"));
     }
 
     @Test
-    void rejectDraft_ShouldChangeStatusToRejected_WhenDraftExists() {
-        // Given
-        Draft draft = new Draft();
-        draft.setId("123");
-        draft.setStatus(Draft.DraftStatus.PENDING);
+    void rejectDraft_withValidReason_changesStatusToRejected() {
+        Draft draft = buildDraft(Draft.DraftStatus.PENDING);
+        when(draftRepository.findById("draft-1")).thenReturn(Optional.of(draft));
+        when(draftRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(sourceRepository.findByDraftId("draft-1")).thenReturn(List.of());
+        when(versionRepository.findByDraftIdOrderByVersionNumberAsc("draft-1")).thenReturn(List.of());
 
-        when(draftRepository.findById("123")).thenReturn(Optional.of(draft));
-        when(draftRepository.save(any(Draft.class))).thenReturn(draft);
+        DraftReviewUseCase.DraftDetailDto result = draftReviewService.rejectDraft("draft-1",
+                new DraftReviewUseCase.RejectRequest("Contenido no es relevante"));
 
-        DraftReviewUseCase.RejectRequest request = new DraftReviewUseCase.RejectRequest("Not relevant");
-
-        // When
-        DraftReviewUseCase.DraftDetailDto result = draftReviewService.rejectDraft("123", request);
-
-        // Then
         assertEquals("REJECTED", result.status());
-        assertEquals("Not relevant", draft.getRejectionReason());
+    }
+
+    @Test
+    void rejectDraft_withEmptyReason_throwsException() {
+        Draft draft = buildDraft(Draft.DraftStatus.PENDING);
+        when(draftRepository.findById("draft-1")).thenReturn(Optional.of(draft));
+
+        assertThrows(IllegalArgumentException.class, () ->
+                draftReviewService.rejectDraft("draft-1", new DraftReviewUseCase.RejectRequest("")));
+    }
+
+    @Test
+    void updateContent_savesPreviousVersionBeforeUpdating() {
+        Draft draft = buildDraft(Draft.DraftStatus.PENDING);
+        draft.setContent("Original content");
+        when(draftRepository.findById("draft-1")).thenReturn(Optional.of(draft));
+        when(draftRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(versionRepository.countByDraftId("draft-1")).thenReturn(0);
+        when(versionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(sourceRepository.findByDraftId("draft-1")).thenReturn(List.of());
+        when(versionRepository.findByDraftIdOrderByVersionNumberAsc("draft-1")).thenReturn(List.of());
+
+        draftReviewService.updateContent("draft-1", new DraftReviewUseCase.UpdateContentRequest("New content"));
+
+        // Verify a version was saved before updating
+        verify(versionRepository).save(any());
+        verify(draftRepository).save(any(Draft.class));
+    }
+
+    @Test
+    void getDraftDetail_withNonExistentId_throwsException() {
+        when(draftRepository.findById("non-existent")).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> draftReviewService.getDraftDetail("non-existent"));
+    }
+
+    private Draft buildDraft(Draft.DraftStatus status) {
+        Draft draft = new Draft();
+        draft.setId("draft-1");
+        draft.setChannel(Draft.Channel.LINKEDIN);
+        draft.setContent("Test content");
+        draft.setStatus(status);
+        return draft;
     }
 }
