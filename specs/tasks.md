@@ -311,6 +311,71 @@ Cada tarea construye sobre la anterior; al final todos los módulos quedan integ
 
 ---
 
+### 10.A Tarea LinkedIn — Validación de token y reintentos ⏳
+
+**Rama:** `task/talentcircle/publication/linkedin-token-validation`
+
+**📋 Actividades:**
+
+**10.A.1** Agregar endpoint `POST /api/v1/admin/linkedin/validate` que llame a `LinkedInClientAdapter.validateConnection(token)`
+- Recibe `{ "accessToken": "..." }` en el body
+- Devuelve `{ "valid": true/false, "personId": "..." }` si el token es válido
+- Permite al admin verificar credenciales antes de publicar
+- **Requisitos:** RF-23, RF-27
+
+**10.A.2** Implementar backoff exponencial en `LinkedInClientAdapter.publishPost()`
+- Máximo 3 reintentos con delays: 1s → 2s → 4s
+- Si los 3 reintentos fallan → lanzar `LinkedInApiException` con mensaje claro
+- Registrar cada reintento en el log con nivel WARN
+- **Requisitos:** RF-27
+
+**10.A.3** Agregar manejo de token expirado (HTTP 401 de LinkedIn)
+- Detectar respuesta 401 → lanzar `LinkedInTokenExpiredException`
+- El `GlobalExceptionHandler` debe mapear esta excepción a HTTP 502 con mensaje descriptivo
+- **Requisitos:** RF-27, RNF-09
+
+**✅ Definition of Done:**
+- Endpoint de validación de token funciona y devuelve estado correcto
+- Reintentos con backoff exponencial implementados y testeados
+- Token expirado manejado con mensaje claro al usuario
+- Tests unitarios para los 3 escenarios de reintento
+
+---
+
+### 10.B Tarea LinkedIn — Tests unitarios del adaptador ⏳
+
+**Rama:** `task/talentcircle/publication/linkedin-tests`
+
+**📋 Actividades:**
+
+**10.B.1** Escribir tests unitarios para `LinkedInClientAdapter` con MockWebServer (OkHttp)
+- Caso 1: `publishPost()` exitoso → devuelve ID del post desde header `X-RestLi-Id`
+- Caso 2: `publishPost()` con 401 → lanza `LinkedInApiException` con mensaje de credenciales
+- Caso 3: `publishPost()` con 429 (rate limit) → lanza `LinkedInApiException` con mensaje de límite
+- Caso 4: `checkStatus()` con `lifecycleState=PUBLISHED` → devuelve `SUCCESS`
+- Caso 5: `validateConnection()` con token válido → devuelve `true`
+- Caso 6: `validateConnection()` con token vacío → devuelve `false` sin llamar a la API
+- **Requisitos:** RF-23, RF-27
+
+**10.B.2** Escribir test de propiedad: idempotencia de publicación
+- **Propiedad:** Publicar un borrador ya en estado `PUBLISHED` no crea una nueva `Publication` ni llama a LinkedIn API
+- Verificar que `PublicationService.publishDraft()` lanza `IllegalStateException` si el draft ya está `PUBLISHED`
+- **Valida:** Requisito RF-23
+
+**10.B.3** Escribir test de integración para el flujo completo de publicación
+- Usar `@SpringBootTest` + Testcontainers (PostgreSQL)
+- Flujo: crear draft APPROVED → llamar `POST /api/v1/drafts/{id}/publish` → verificar estado `PUBLISHED` en BD
+- Mock de `LinkedInClientPort` para no llamar a la API real
+- **Requisitos:** RF-23 a RF-26
+
+**✅ Definition of Done:**
+- 6 tests unitarios pasando para `LinkedInClientAdapter`
+- Test de propiedad de idempotencia pasando
+- Test de integración del flujo completo pasando
+- Cobertura de `LinkedInClientAdapter` y `PublicationService` >= 80%
+
+---
+
 ### 11. Módulo Admin (Administración) ⏳
 
 **📋 Actividades:**
