@@ -63,6 +63,7 @@ public class PipelineOrchestratorService implements PipelineOrchestratorUseCase 
         } catch (Exception e) {
             execution.setStatus(WeeklyExecution.ExecutionStatus.FAILED);
             execution.setCompletedAt(LocalDateTime.now());
+            executionRepository.save(execution);
             throw new RuntimeException("Pipeline failed for execution " + executionId + ": " + e.getMessage(), e);
         }
 
@@ -100,6 +101,7 @@ public class PipelineOrchestratorService implements PipelineOrchestratorUseCase 
         } catch (Exception e) {
             execution.setStatus(WeeklyExecution.ExecutionStatus.FAILED);
             execution.setCompletedAt(LocalDateTime.now());
+            executionRepository.save(execution);
             throw new RuntimeException("Pipeline retry failed for execution " + executionId + ": " + e.getMessage(), e);
         }
 
