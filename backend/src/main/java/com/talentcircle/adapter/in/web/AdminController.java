@@ -1,5 +1,6 @@
 package com.talentcircle.adapter.in.web;
 
+import com.talentcircle.adapter.out.linkedin.LinkedInClientAdapter;
 import com.talentcircle.domain.port.in.AdminUseCase;
 import com.talentcircle.domain.port.in.AdminUseCase.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,9 +24,11 @@ import java.util.List;
 public class AdminController {
 
     private final AdminUseCase adminUseCase;
+    private final LinkedInClientAdapter linkedInClientAdapter;
 
-    public AdminController(AdminUseCase adminUseCase) {
+    public AdminController(AdminUseCase adminUseCase, LinkedInClientAdapter linkedInClientAdapter) {
         this.adminUseCase = adminUseCase;
+        this.linkedInClientAdapter = linkedInClientAdapter;
     }
 
     // =========================================================================
@@ -350,4 +353,49 @@ public class AdminController {
         adminUseCase.triggerExecution(triggeredBy);
         return ResponseEntity.accepted().build();
     }
+
+    // =========================================================================
+    // LINKEDIN — Validación de credenciales (Tarea 10.A)
+    // =========================================================================
+
+    @Tag(name = "Admin › LinkedIn")
+    @Operation(
+        summary = "Validar token de LinkedIn",
+        description = "Verifica que el access token de LinkedIn sea válido llamando a GET /me. " +
+                      "Devuelve el personId si el token es correcto. " +
+                      "Úsalo para confirmar las credenciales antes de publicar."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Resultado de la validación",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                examples = {
+                    @ExampleObject(name = "Token válido",
+                        value = """
+                            { "valid": true, "personId": "ABC123xyz" }
+                            """),
+                    @ExampleObject(name = "Token inválido",
+                        value = """
+                            { "valid": false, "personId": null }
+                            """)
+                })),
+        @ApiResponse(responseCode = "400", description = "Token no proporcionado")
+    })
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+        required = true,
+        content = @Content(examples = @ExampleObject(value = """
+            { "accessToken": "AQV..." }
+            """))
+    )
+    @PostMapping("/linkedin/validate")
+    public ResponseEntity<LinkedInValidationResponse> validateLinkedInToken(
+            @RequestBody LinkedInValidationRequest request) {
+        if (request.accessToken() == null || request.accessToken().isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+        String personId = linkedInClientAdapter.validateAndGetPersonId(request.accessToken());
+        return ResponseEntity.ok(new LinkedInValidationResponse(personId != null, personId));
+    }
+
+    record LinkedInValidationRequest(String accessToken) {}
+    record LinkedInValidationResponse(boolean valid, String personId) {}
 }

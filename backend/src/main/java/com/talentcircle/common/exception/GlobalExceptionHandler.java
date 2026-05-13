@@ -1,5 +1,6 @@
 package com.talentcircle.common.exception;
 
+import com.talentcircle.adapter.out.linkedin.LinkedInTokenExpiredException;
 import com.talentcircle.common.dto.ApiResponse;
 import jakarta.validation.ConstraintViolation;
 import org.springframework.http.HttpStatus;
@@ -55,6 +56,12 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.validationError(errors));
+    }
+
+    @ExceptionHandler(LinkedInTokenExpiredException.class)
+    public ResponseEntity<ApiResponse<Void>> handleLinkedInTokenExpired(LinkedInTokenExpiredException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
