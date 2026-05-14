@@ -21,36 +21,75 @@ const STATUS_DISPLAY = {
   REJECTED: 'Rechazado',
 }
 
-// ─── Pipeline banner (static — shows last execution info) ────────────────────
+// ─── Pipeline banner — reflects real execution status ─────────────────────────
 function PipelineBanner() {
+  const { pipelineStatus, pipelineRunning } = useAppStore()
+
+  // Map pipeline status to which step is "active"
+  const getStepStatus = (stepIndex) => {
+    if (pipelineStatus === 'failed') {
+      // Show all steps as waiting on failure
+      return stepIndex === 0 ? 'done' : 'waiting'
+    }
+    if (pipelineRunning || pipelineStatus === 'running') {
+      // Animate the step currently in progress
+      if (stepIndex === 0) return 'done'
+      if (stepIndex === 1) return 'active'
+      return 'waiting'
+    }
+    if (pipelineStatus === 'completed') {
+      // All steps done except the last two (editorial + publication are manual)
+      if (stepIndex <= 2) return 'done'
+      if (stepIndex === 3) return 'active'
+      return 'waiting'
+    }
+    // idle — default view
+    if (stepIndex <= 2) return 'done'
+    if (stepIndex === 3) return 'active'
+    return 'waiting'
+  }
+
   const steps = [
-    { label: 'Recolección', status: 'done' },
-    { label: 'Análisis IA', status: 'done' },
-    { label: 'Generación', status: 'done' },
-    { label: 'Revisión', status: 'active' },
-    { label: 'Publicación', status: 'waiting' },
+    { label: 'Recolección' },
+    { label: 'Análisis IA' },
+    { label: 'Generación' },
+    { label: 'Revisión' },
+    { label: 'Publicación' },
   ]
+
+  const bannerLabel =
+    pipelineRunning || pipelineStatus === 'running'
+      ? 'Pipeline en ejecución…'
+      : pipelineStatus === 'failed'
+      ? '⚠ Pipeline fallido'
+      : pipelineStatus === 'completed'
+      ? '✓ Pipeline completado'
+      : 'Pipeline activo'
+
   return (
-    <div className={styles.banner}>
+    <div className={`${styles.banner} ${pipelineStatus === 'failed' ? styles.bannerError : ''}`}>
       <div className={styles.bannerLeft} />
       <div className={styles.steps}>
-        {steps.map((s, i) => (
-          <>
-            <div key={s.label} className={styles.step}>
-              <div className={`${styles.dot} ${styles[s.status]}`}>
-                {s.status === 'done' ? '✓' : s.status === 'active' ? '◉' : '○'}
+        {steps.map((s, i) => {
+          const status = getStepStatus(i)
+          return (
+            <>
+              <div key={s.label} className={styles.step}>
+                <div className={`${styles.dot} ${styles[status]}`}>
+                  {status === 'done' ? '✓' : status === 'active' ? '◉' : '○'}
+                </div>
+                <span className={styles.stepLabel}>{s.label}</span>
               </div>
-              <span className={styles.stepLabel}>{s.label}</span>
-            </div>
-            {i < steps.length - 1 && (
-              <span className={styles.arrow} key={`a${i}`}>
-                →
-              </span>
-            )}
-          </>
-        ))}
+              {i < steps.length - 1 && (
+                <span className={styles.arrow} key={`a${i}`}>→</span>
+              )}
+            </>
+          )
+        })}
       </div>
-      <span className={styles.bannerTime}>Pipeline activo</span>
+      <span className={`${styles.bannerTime} ${pipelineStatus === 'failed' ? styles.bannerTimeError : ''}`}>
+        {bannerLabel}
+      </span>
     </div>
   )
 }

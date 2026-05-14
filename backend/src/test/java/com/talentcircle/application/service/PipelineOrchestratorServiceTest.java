@@ -7,6 +7,7 @@ import com.talentcircle.domain.model.WeeklyExecution;
 import com.talentcircle.domain.port.in.AiAnalyzerUseCase;
 import com.talentcircle.domain.port.in.CommunityCollectorUseCase;
 import com.talentcircle.domain.port.in.DraftGeneratorUseCase;
+import com.talentcircle.domain.port.out.PipelineConfigRepository;
 import com.talentcircle.domain.port.out.WeeklyExecutionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,13 +30,14 @@ class PipelineOrchestratorServiceTest {
     @Mock private CommunityCollectorUseCase communityCollector;
     @Mock private AiAnalyzerUseCase aiAnalyzer;
     @Mock private DraftGeneratorUseCase draftGenerator;
+    @Mock private PipelineConfigRepository configRepository;
 
     private PipelineOrchestratorService orchestrator;
 
     @BeforeEach
     void setUp() {
         orchestrator = new PipelineOrchestratorService(
-                executionRepository, communityCollector, aiAnalyzer, draftGenerator);
+                executionRepository, communityCollector, aiAnalyzer, draftGenerator, configRepository);
     }
 
     @Test

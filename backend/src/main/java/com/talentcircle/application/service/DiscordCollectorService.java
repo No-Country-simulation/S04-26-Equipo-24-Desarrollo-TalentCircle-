@@ -33,13 +33,13 @@ public class DiscordCollectorService {
     private static final Logger log = LoggerFactory.getLogger(DiscordCollectorService.class);
 
     /** Mínimo de reacciones + respuestas para considerar un mensaje relevante */
-    private static final int MIN_ENGAGEMENT = 3;
+    private static final int MIN_ENGAGEMENT = 0;
 
     /** Máximo de mensajes a guardar por canal por ejecución */
-    private static final int MAX_MESSAGES_PER_CHANNEL = 50;
+    private static final int MAX_MESSAGES_PER_CHANNEL = 1;
 
     /** Cuántos mensajes históricos pedir a Discord por canal */
-    private static final int HISTORY_LIMIT = 200;
+    private static final int HISTORY_LIMIT = 100;
 
     @Value("${app.discord.bot-token:}")
     private String botToken;
