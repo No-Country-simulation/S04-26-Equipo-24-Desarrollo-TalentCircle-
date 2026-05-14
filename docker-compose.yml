@@ -31,7 +31,11 @@ services:
       - SPRING_FLYWAY_ENABLED=true
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
+      - VITE_API_BASE_URL=
       - JWT_SECRET=el-secreto-esMuySeguro
+      - DISCORD_BOT_TOKEN=MTUwMjQ4MzM3Nzg4OTA4NzU1OQ.Gs2zxI.jbF8-UHf7KongfGzXa2Gyw7sIX07nADt3btjhs
+      - DISCORD_GUILD_ID=1018667130964688987
+
     depends_on:
       redis:
         condition: service_healthy

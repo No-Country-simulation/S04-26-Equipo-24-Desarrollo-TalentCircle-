@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { useAppStore } from '../store/useAppStore'
 
-const BASE_URL = 'http://localhost:8081'
+const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const apiClient = axios.create({
   baseURL: BASE_URL,

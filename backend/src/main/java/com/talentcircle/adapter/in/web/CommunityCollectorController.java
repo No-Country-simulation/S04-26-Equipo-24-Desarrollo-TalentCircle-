@@ -43,6 +43,7 @@ public class CommunityCollectorController {
         @ApiResponse(responseCode = "404", description = "Ejecución o fuente no encontrada"),
         @ApiResponse(responseCode = "401", description = "No autenticado")
     })
+
     @PostMapping("/collect")
     public ResponseEntity<Void> triggerCollection(
             @Parameter(description = "UUID de la ejecución semanal", example = "exec-001", required = true)
@@ -50,6 +51,7 @@ public class CommunityCollectorController {
 
             @Parameter(description = "UUID de la fuente comunitaria", example = "src-001", required = true)
             @RequestParam String sourceId) {
+
         collectorUseCase.collectActivity(executionId, sourceId);
         return ResponseEntity.accepted().build();
     }
