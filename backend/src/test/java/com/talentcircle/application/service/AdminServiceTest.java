@@ -4,6 +4,7 @@ import com.talentcircle.domain.model.CommunitySource;
 import com.talentcircle.domain.model.PipelineConfig;
 import com.talentcircle.domain.model.User;
 import com.talentcircle.domain.port.in.AdminUseCase;
+import com.talentcircle.domain.port.in.PipelineOrchestratorUseCase;
 import com.talentcircle.domain.port.out.CommunitySourceRepository;
 import com.talentcircle.domain.port.out.PipelineConfigRepository;
 import com.talentcircle.domain.port.out.UserRepository;
@@ -37,11 +38,14 @@ class AdminServiceTest {
     @Mock
     private WeeklyExecutionRepository executionRepository;
 
+    @Mock
+    private PipelineOrchestratorUseCase pipelineOrchestrator;
+
     private AdminService adminService;
 
     @BeforeEach
     void setUp() {
-        adminService = new AdminService(sourceRepository, configRepository, userRepository, executionRepository);
+        adminService = new AdminService(sourceRepository, configRepository, userRepository, executionRepository, pipelineOrchestrator);
     }
 
     @Test

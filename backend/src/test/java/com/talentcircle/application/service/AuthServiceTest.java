@@ -50,7 +50,7 @@ class AuthServiceTest {
 
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
         when(jwtService.generateAccessToken("123", "ADMIN")).thenReturn("access-token");
-        when(jwtService.generateRefreshToken()).thenReturn("refresh-token");
+        when(jwtService.generateRefreshToken("123")).thenReturn("refresh-token");
 
         AuthUseCase.LoginRequest request = new AuthUseCase.LoginRequest("test@example.com", "password123");
 
