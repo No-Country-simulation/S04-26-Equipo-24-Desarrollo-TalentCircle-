@@ -53,9 +53,7 @@ app:
   cors:
     allowed-origins: ${FRONTEND_URL:http://localhost:5173}
 
-  discord:
-    bot-token: MTUwMjQ4MzM3Nzg4OTA4NzU1OQ.Gs2zxI.jbF8-UHf7KongfGzXa2Gyw7sIX07nADt3btjhs
-    guild-id: 1018667130964688987
+  
 
 logging:
   pattern:
