@@ -45,8 +45,8 @@ app:
     allowed-origins: http://localhost:5173, http://localhost:8081
 
   discord:
-    bot-token: ${DISCORD_BOT_TOKEN}
-    guild-id: ${DISCORD_GUILD_ID}
+    bot-token: ${DISCORD_BOT_TOKEN:}
+    guild-id: ${DISCORD_GUILD_ID:}
 
 springdoc:
   api-docs:
