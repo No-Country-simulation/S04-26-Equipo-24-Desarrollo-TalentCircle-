@@ -1,4 +1,4 @@
-import apiClient from './apiClient'
+import apiClient from "./apiClient";
 
 /**
  * Auth API module
@@ -13,8 +13,8 @@ import apiClient from './apiClient'
  */
 export const login = (email, password) =>
   apiClient
-    .post('/api/v1/auth/login', { email, password })
-    .then((res) => res.data)
+    .post("/api/v1/auth/login", { email, password })
+    .then((res) => res.data);
 
 /**
  * Invalidate the current session on the server.
@@ -22,7 +22,7 @@ export const login = (email, password) =>
  * @returns {Promise<void>}
  */
 export const logout = () =>
-  apiClient.post('/api/v1/auth/logout').then(() => undefined)
+  apiClient.post("/api/v1/auth/logout").then(() => undefined);
 
 /**
  * Exchange a refresh token for a new access token.
@@ -31,8 +31,8 @@ export const logout = () =>
  */
 export const refresh = (refreshToken) =>
   apiClient
-    .post('/api/v1/auth/refresh', { refreshToken })
-    .then((res) => res.data)
+    .post("/api/v1/auth/refresh", { refreshToken })
+    .then((res) => res.data);
 
-const authApi = { login, logout, refresh }
-export default authApi
+const authApi = { login, logout, refresh };
+export default authApi;
