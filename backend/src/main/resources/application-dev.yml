@@ -2,7 +2,6 @@ server:
   port: 8080
 
 spring:
-
   datasource:
     url: jdbc:postgresql://localhost:5432/talentcircle
     username: postgres
@@ -25,7 +24,6 @@ spring:
     validate-on-migrate: false
     table: flyway_schema_history
 
-
   data:
     redis:
       host: localhost
@@ -38,15 +36,26 @@ spring:
 app:
   jwt:
     secret: my-32-character-secret-key-here-32-char
-    access-token-expiration: 28800000  # 8 hours
-    refresh-token-expiration: 604800000  # 7 days
+    access-token-expiration: 28800000
+    refresh-token-expiration: 604800000
 
   cors:
     allowed-origins: http://localhost:5173, http://localhost:8081
 
+
+
   discord:
     bot-token: ${DISCORD_BOT_TOKEN:}
     guild-id: ${DISCORD_GUILD_ID:}
+
+  llm:
+    provider: ${LLM_PROVIDER:openrouter}
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      model: gpt-4o-mini
+    openrouter:
+      api-key: ${OPENROUTER_API_KEY:}
+      model: ${OPENROUTER_MODEL:openai/gpt-4o-mini}
 
 springdoc:
   api-docs:
@@ -64,6 +73,3 @@ logging:
     com.talentcircle: DEBUG
     org.springframework: INFO
     org.hibernate: INFO
-
-
-

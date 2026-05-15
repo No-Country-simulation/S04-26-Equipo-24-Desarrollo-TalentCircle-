@@ -1,5 +1,6 @@
 package com.talentcircle.application.service;
 
+import com.talentcircle.adapter.out.llm.LlmClientFactory;
 import com.talentcircle.domain.model.AiAnalysis;
 import com.talentcircle.domain.model.Draft;
 import com.talentcircle.domain.model.PipelineConfig;
@@ -29,21 +30,21 @@ import static org.mockito.Mockito.*;
 class DraftGeneratorServiceTest {
 
     @Mock private WeeklyExecutionRepository executionRepository;
-    @Mock private AiAnalysisRepository analysisRepository;
-    @Mock private DraftRepository draftRepository;
-    @Mock private LlmClientPort llmClient;
-    @Mock private PipelineConfigRepository configRepository;
+    @Mock private AiAnalysisRepository      analysisRepository;
+    @Mock private DraftRepository           draftRepository;
+    @Mock private LlmClientPort             llmClient;       // el adapter concreto
+    @Mock private LlmClientFactory          llmClientFactory;
+    @Mock private PipelineConfigRepository  configRepository;
 
     private DraftGeneratorService generatorService;
-
     private WeeklyExecution testExecution;
-    private AiAnalysis testAnalysis;
+    private AiAnalysis      testAnalysis;
 
     @BeforeEach
     void setUp() {
-        // Construct manually — no more @Value fields, prompts come from configRepository
         generatorService = new DraftGeneratorService(
-                executionRepository, analysisRepository, draftRepository, llmClient, configRepository);
+                executionRepository, analysisRepository, draftRepository,
+                llmClientFactory, configRepository);
 
         testExecution = new WeeklyExecution();
         testExecution.setId("exec-123");
@@ -55,9 +56,10 @@ class DraftGeneratorServiceTest {
         testAnalysis.setTopTopics("[\"topic1\", \"topic2\"]");
         testAnalysis.setRelevanceScores("{\"activity1\": 0.9}");
 
+        // Factory always returns the mock LlmClientPort
+        Mockito.lenient().when(llmClientFactory.getClient()).thenReturn(llmClient);
         // Default: no DB config → use built-in defaults
         Mockito.lenient().when(configRepository.findSingleton()).thenReturn(Optional.empty());
-
         // Default LLM stub
         Mockito.lenient().when(llmClient.generateDraft(anyString(), anyString(), anyString()))
                 .thenReturn("Generated content");
@@ -73,11 +75,9 @@ class DraftGeneratorServiceTest {
 
         assertNotNull(drafts);
         assertEquals(3, drafts.size());
-
         assertNotNull(drafts.stream().filter(d -> d.getChannel() == Draft.Channel.NEWSLETTER).findFirst().orElse(null));
         assertNotNull(drafts.stream().filter(d -> d.getChannel() == Draft.Channel.LINKEDIN).findFirst().orElse(null));
         assertNotNull(drafts.stream().filter(d -> d.getChannel() == Draft.Channel.TWITTER).findFirst().orElse(null));
-
         verify(draftRepository, times(3)).save(any(Draft.class));
     }
 
@@ -93,10 +93,8 @@ class DraftGeneratorServiceTest {
         when(analysisRepository.findByExecutionId("exec-123")).thenReturn(Optional.of(testAnalysis));
         when(draftRepository.save(any(Draft.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        List<Draft> drafts = generatorService.generateDrafts("exec-123");
+        generatorService.generateDrafts("exec-123");
 
-        assertEquals(3, drafts.size());
-        // Verify LLM was called with the DB prompts
         verify(llmClient).generateDraft(anyString(), eq("NEWSLETTER"), eq("Prompt newsletter desde BD"));
         verify(llmClient).generateDraft(anyString(), eq("LINKEDIN"),   eq("Prompt linkedin desde BD"));
         verify(llmClient).generateDraft(anyString(), eq("TWITTER"),    eq("Prompt twitter desde BD"));
@@ -106,10 +104,10 @@ class DraftGeneratorServiceTest {
     void generateDrafts_shouldThrowExceptionWhenExecutionNotFound() {
         when(executionRepository.findById("invalid-exec")).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                generatorService.generateDrafts("invalid-exec"));
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> generatorService.generateDrafts("invalid-exec"));
 
-        assertEquals("Execution not found: invalid-exec", exception.getMessage());
+        assertEquals("Execution not found: invalid-exec", ex.getMessage());
         verify(analysisRepository, never()).findByExecutionId(anyString());
         verify(draftRepository, never()).save(any(Draft.class));
     }
@@ -119,10 +117,10 @@ class DraftGeneratorServiceTest {
         when(executionRepository.findById("exec-123")).thenReturn(Optional.of(testExecution));
         when(analysisRepository.findByExecutionId("exec-123")).thenReturn(Optional.empty());
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-                generatorService.generateDrafts("exec-123"));
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> generatorService.generateDrafts("exec-123"));
 
-        assertEquals("No AI analysis found for execution: exec-123", exception.getMessage());
+        assertEquals("No AI analysis found for execution: exec-123", ex.getMessage());
         verify(draftRepository, never()).save(any(Draft.class));
     }
 
@@ -130,37 +128,28 @@ class DraftGeneratorServiceTest {
     void generateDrafts_shouldTruncateTwitterContent() {
         when(executionRepository.findById("exec-123")).thenReturn(Optional.of(testExecution));
         when(analysisRepository.findByExecutionId("exec-123")).thenReturn(Optional.of(testAnalysis));
-
-        String longContent = "a".repeat(300);
-        when(llmClient.generateDraft(anyString(), eq("TWITTER"), anyString())).thenReturn(longContent);
+        when(llmClient.generateDraft(anyString(), eq("TWITTER"), anyString())).thenReturn("a".repeat(300));
         when(draftRepository.save(any(Draft.class))).thenAnswer(inv -> inv.getArgument(0));
 
         List<Draft> drafts = generatorService.generateDrafts("exec-123");
-        Draft twitterDraft = drafts.stream()
-                .filter(d -> d.getChannel() == Draft.Channel.TWITTER)
-                .findFirst().orElse(null);
+        Draft twitter = drafts.stream().filter(d -> d.getChannel() == Draft.Channel.TWITTER).findFirst().orElseThrow();
 
-        assertNotNull(twitterDraft);
-        assertTrue(twitterDraft.getContent().length() <= 280);
-        assertTrue(twitterDraft.getContent().endsWith("..."));
+        assertTrue(twitter.getContent().length() <= 280);
+        assertTrue(twitter.getContent().endsWith("..."));
     }
 
     @Test
     void generateDrafts_shouldNotTruncateNewsletterContent() {
         when(executionRepository.findById("exec-123")).thenReturn(Optional.of(testExecution));
         when(analysisRepository.findByExecutionId("exec-123")).thenReturn(Optional.of(testAnalysis));
-
-        String longNewsletter = "n".repeat(5000);
-        when(llmClient.generateDraft(anyString(), eq("NEWSLETTER"), anyString())).thenReturn(longNewsletter);
+        String longContent = "n".repeat(5000);
+        when(llmClient.generateDraft(anyString(), eq("NEWSLETTER"), anyString())).thenReturn(longContent);
         when(draftRepository.save(any(Draft.class))).thenAnswer(inv -> inv.getArgument(0));
 
         List<Draft> drafts = generatorService.generateDrafts("exec-123");
-        Draft newsletterDraft = drafts.stream()
-                .filter(d -> d.getChannel() == Draft.Channel.NEWSLETTER)
-                .findFirst().orElse(null);
+        Draft newsletter = drafts.stream().filter(d -> d.getChannel() == Draft.Channel.NEWSLETTER).findFirst().orElseThrow();
 
-        assertNotNull(newsletterDraft);
-        assertEquals(longNewsletter.length(), newsletterDraft.getContent().length());
+        assertEquals(longContent.length(), newsletter.getContent().length());
     }
 
     @Test
@@ -171,9 +160,6 @@ class DraftGeneratorServiceTest {
 
         List<Draft> drafts = generatorService.generateDrafts("exec-123");
 
-        for (Draft draft : drafts) {
-            assertNotNull(draft.getAiScore());
-            assertEquals(0.85, draft.getAiScore(), 0.001);
-        }
+        drafts.forEach(d -> assertEquals(0.85, d.getAiScore(), 0.001));
     }
 }

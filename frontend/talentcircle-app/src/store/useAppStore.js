@@ -74,6 +74,11 @@ export const useAppStore = create((set) => ({
     }),
   dismissPipelineAlert: () => set({ pipelineAlertDismissed: true }),
 
+  // ── Draft counts — actualizados por Dashboard al cargar ───────────────────
+  draftTotalCount: null,    // null = aún no cargado
+  draftPendingCount: null,
+  setDraftCounts: (total, pending) => set({ draftTotalCount: total, draftPendingCount: pending }),
+
   // Data (no initial mock values — pages own their local state)
   drafts: [],
   executions: [],

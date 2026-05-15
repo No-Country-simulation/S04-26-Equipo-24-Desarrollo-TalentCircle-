@@ -5,7 +5,7 @@ import styles from './Sidebar.module.css'
 
 const NAV = [
   { to: '/dashboard',  icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/drafts',     icon: FileText,         label: 'Borradores', badge: 4 },
+  { to: '/drafts',     icon: FileText,         label: 'Borradores' },
   { to: '/executions', icon: Zap,              label: 'Ejecuciones' },
 ]
 const ADMIN_NAV = [
@@ -32,7 +32,7 @@ function formatRole(role) {
 }
 
 export default function Sidebar() {
-  const { currentUser, logout } = useAppStore()
+  const { currentUser, logout, draftPendingCount } = useAppStore()
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -53,14 +53,18 @@ export default function Sidebar() {
       </div>
 
       <span className={styles.sectionLabel}>Principal</span>
-      {NAV.map(({ to, icon: Icon, label, badge }) => (
-        <NavLink key={to} to={to} className={({ isActive }) =>
-          `${styles.navItem} ${isActive ? styles.active : ''}`}>
-          <Icon size={16} />
-          <span>{label}</span>
-          {badge && <span className={styles.badge}>{badge}</span>}
-        </NavLink>
-      ))}
+      {NAV.map(({ to, icon: Icon, label }) => {
+        // Badge dinámico: solo en /drafts, solo si hay pendientes
+        const badge = to === '/drafts' && draftPendingCount > 0 ? draftPendingCount : null
+        return (
+          <NavLink key={to} to={to} className={({ isActive }) =>
+            `${styles.navItem} ${isActive ? styles.active : ''}`}>
+            <Icon size={16} />
+            <span>{label}</span>
+            {badge && <span className={styles.badge}>{badge}</span>}
+          </NavLink>
+        )
+      })}
 
       <span className={styles.sectionLabel}>Configuración</span>
       {ADMIN_NAV.map(({ to, icon: Icon, label }) => (

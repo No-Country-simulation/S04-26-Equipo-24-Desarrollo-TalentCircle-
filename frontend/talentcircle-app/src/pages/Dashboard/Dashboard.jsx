@@ -131,7 +131,7 @@ function DraftSummarySkeleton() {
 
 // ─── Page component ───────────────────────────────────────────────────────────
 export default function Dashboard() {
-  const { openModal } = useAppStore()
+  const { openModal, pipelineStatus, setDraftCounts } = useAppStore()
   const navigate = useNavigate()
 
   // ── Local state ──────────────────────────────────────────────────────────
@@ -141,18 +141,19 @@ export default function Dashboard() {
   const [feedLoading, setFeedLoading] = useState(true)
 
   // ── Data fetching ────────────────────────────────────────────────────────
-  useEffect(() => {
-    let cancelled = false
-
-    // Step 1: fetch drafts and executions in parallel
+  const fetchData = (cancelled) => {
     Promise.all([draftsApi.list(), adminApi.getExecutions()])
       .then(([fetchedDrafts, executions]) => {
-        if (cancelled) return
+        if (cancelled?.value) return
 
         setDrafts(fetchedDrafts)
+
+        // Publish counts to global store so Topbar can read them
+        const pending = derivePendingCount(fetchedDrafts)
+        setDraftCounts(fetchedDrafts.length, pending)
+
         setStatsLoading(false)
 
-        // Step 2: fetch activities for the most recent execution
         if (executions.length === 0) {
           setFeedLoading(false)
           return
@@ -162,27 +163,37 @@ export default function Dashboard() {
         collectorApi
           .getActivities(mostRecent.id)
           .then((fetchedActivities) => {
-            if (!cancelled) setActivities(fetchedActivities)
+            if (!cancelled?.value) setActivities(fetchedActivities)
           })
-          .catch(() => {
-            // error already toasted by apiClient interceptor
-          })
+          .catch(() => {})
           .finally(() => {
-            if (!cancelled) setFeedLoading(false)
+            if (!cancelled?.value) setFeedLoading(false)
           })
       })
       .catch(() => {
-        // error already toasted by apiClient interceptor
-        if (!cancelled) {
+        if (!cancelled?.value) {
           setStatsLoading(false)
           setFeedLoading(false)
         }
       })
+  }
 
-    return () => {
-      cancelled = true
-    }
+  // Initial load
+  useEffect(() => {
+    const cancelled = { value: false }
+    fetchData(cancelled)
+    return () => { cancelled.value = true }
   }, [])
+
+  // Refresh when pipeline completes — new drafts were just generated
+  useEffect(() => {
+    if (pipelineStatus === 'completed') {
+      const cancelled = { value: false }
+      setStatsLoading(true)
+      fetchData(cancelled)
+      return () => { cancelled.value = true }
+    }
+  }, [pipelineStatus])
 
   // ── Derived stats ────────────────────────────────────────────────────────
   const generatedCount = drafts.length

@@ -200,6 +200,8 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <!-- Forzar IPv4 para evitar UnknownHostException en redes sin IPv6 -->
+                    <jvmArguments>-Djava.net.preferIPv4Stack=true</jvmArguments>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>

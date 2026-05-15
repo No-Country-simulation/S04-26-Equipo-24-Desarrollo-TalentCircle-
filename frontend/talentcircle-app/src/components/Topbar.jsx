@@ -4,9 +4,8 @@ import { useAppStore } from '../store/useAppStore'
 import adminApi from '../api/adminApi'
 import styles from './Topbar.module.css'
 
-const META = {
-  '/dashboard':  { title: 'Dashboard Semanal',       sub: 'Resumen semanal del pipeline de contenido' },
-  '/drafts':     { title: 'Borradores',               sub: 'Panel editorial — revisión y aprobación' },
+// Subtítulos estáticos para rutas que no necesitan datos dinámicos
+const STATIC_META = {
   '/executions': { title: 'Historial de Ejecuciones', sub: 'Registro completo del pipeline' },
   '/admin':      { title: 'Administración',            sub: 'Configuración del sistema y usuarios' },
 }
@@ -24,13 +23,35 @@ export default function Topbar() {
     setPipelineRunning,
     setPipelineStatus,
     dismissPipelineAlert,
+    draftTotalCount,
+    draftPendingCount,
   } = useAppStore()
 
-  const { title, sub } = META[pathname] || { title: 'TalentCircle', sub: '' }
+  // ── Dynamic subtitles for routes that show draft counts ──────────────────
+  const getDraftsSub = () => {
+    if (draftTotalCount === null) return 'Panel editorial — revisión y aprobación'
+    const pending = draftPendingCount ?? 0
+    return `${draftTotalCount} borrador${draftTotalCount !== 1 ? 'es' : ''} · ${pending} pendiente${pending !== 1 ? 's' : ''} de revisión`
+  }
 
-  // ── Show alert bell when last execution failed and user hasn't dismissed it
-  const showAlert =
-    pipelineStatus === 'failed' && !pipelineAlertDismissed
+  const getDashboardSub = () => {
+    if (draftTotalCount === null) return 'Resumen semanal del pipeline de contenido'
+    const pending = draftPendingCount ?? 0
+    if (pending > 0) return `${pending} borrador${pending !== 1 ? 'es' : ''} pendiente${pending !== 1 ? 's' : ''} de revisión`
+    return `${draftTotalCount} borrador${draftTotalCount !== 1 ? 'es' : ''} generados esta semana`
+  }
+
+  const getMeta = () => {
+    if (STATIC_META[pathname]) return STATIC_META[pathname]
+    if (pathname === '/drafts')    return { title: 'Borradores',        sub: getDraftsSub() }
+    if (pathname === '/dashboard') return { title: 'Dashboard Semanal', sub: getDashboardSub() }
+    return { title: 'TalentCircle', sub: '' }
+  }
+
+  const { title, sub } = getMeta()
+
+  // ── Show alert bell when last execution failed ────────────────────────────
+  const showAlert = pipelineStatus === 'failed' && !pipelineAlertDismissed
 
   // ── Trigger pipeline manually ─────────────────────────────────────────────
   const runPipeline = async () => {
@@ -50,7 +71,6 @@ export default function Topbar() {
         err?.message ||
         'Error desconocido al ejecutar el pipeline.'
       setPipelineStatus('failed', msg)
-      // Don't call showToast here — apiClient interceptor already showed it
     } finally {
       setPipelineRunning(false)
     }
@@ -90,7 +110,6 @@ export default function Topbar() {
             className={`${styles.iconBtn} ${showAlert ? styles.iconBtnAlert : ''}`}
             onClick={() => {
               if (showAlert) {
-                // Navigate to executions so the user can see the error detail
                 navigate('/executions')
               } else {
                 showToast('🔔', 'Sin alertas', 'El pipeline está funcionando correctamente.')

@@ -1,5 +1,6 @@
 package com.talentcircle.application.service;
 
+import com.talentcircle.adapter.out.llm.LlmClientFactory;
 import com.talentcircle.domain.model.AiAnalysis;
 import com.talentcircle.domain.model.Draft;
 import com.talentcircle.domain.model.PipelineConfig;
@@ -42,19 +43,19 @@ public class DraftGeneratorService implements DraftGeneratorUseCase {
     private final WeeklyExecutionRepository executionRepository;
     private final AiAnalysisRepository analysisRepository;
     private final DraftRepository draftRepository;
-    private final LlmClientPort llmClient;
+    private final LlmClientFactory llmClientFactory;
     private final PipelineConfigRepository configRepository;
 
     public DraftGeneratorService(WeeklyExecutionRepository executionRepository,
                                  AiAnalysisRepository analysisRepository,
                                  DraftRepository draftRepository,
-                                 LlmClientPort llmClient,
+                                 LlmClientFactory llmClientFactory,
                                  PipelineConfigRepository configRepository) {
         this.executionRepository = executionRepository;
-        this.analysisRepository = analysisRepository;
-        this.draftRepository = draftRepository;
-        this.llmClient = llmClient;
-        this.configRepository = configRepository;
+        this.analysisRepository  = analysisRepository;
+        this.draftRepository     = draftRepository;
+        this.llmClientFactory    = llmClientFactory;
+        this.configRepository    = configRepository;
     }
 
     @Override
@@ -105,7 +106,7 @@ public class DraftGeneratorService implements DraftGeneratorUseCase {
         draft.setChannel(channel);
         draft.setStatus(Draft.DraftStatus.PENDING);
 
-        String draftContent = llmClient.generateDraft(analysisJson, channel.name(), promptTemplate);
+        String draftContent = llmClientFactory.getClient().generateDraft(analysisJson, channel.name(), promptTemplate);
         draftContent = validateAndTruncateContent(draftContent, channel);
 
         draft.setContent(draftContent);
