@@ -1,60 +1,87 @@
-import { useLocation, useNavigate } from 'react-router-dom'
-import { Bell, Play, MoreVertical, AlertTriangle, X } from 'lucide-react'
-import { useAppStore } from '../store/useAppStore'
-import adminApi from '../api/adminApi'
-import styles from './Topbar.module.css'
+import { useLocation } from "react-router-dom";
+import { Bell, Play, MoreVertical } from "lucide-react";
+import { useAppStore } from "../store/useAppStore";
+import styles from "./Topbar.module.css";
 
-const META = {
-  '/dashboard':  { title: 'Dashboard Semanal',       sub: 'Resumen semanal del pipeline de contenido' },
-  '/drafts':     { title: 'Borradores',               sub: 'Panel editorial — revisión y aprobación' },
-  '/executions': { title: 'Historial de Ejecuciones', sub: 'Registro completo del pipeline' },
-  '/admin':      { title: 'Administración',            sub: 'Configuración del sistema y usuarios' },
+// ─────────────────────────────────────────────────────────────
+// Helper → obtiene rango de semana actual
+// ─────────────────────────────────────────────────────────────
+function getCurrentWeekRange() {
+  const today = new Date();
+
+  // Clonar fecha
+  const start = new Date(today);
+  const end = new Date(today);
+
+  // Lunes como inicio de semana
+  const day = today.getDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+
+  start.setDate(today.getDate() + diffToMonday);
+  end.setDate(start.getDate() + 6);
+
+  const options = { day: "numeric", month: "long" };
+
+  const startFormatted = start.toLocaleDateString("es-AR", options);
+  const endFormatted = end.toLocaleDateString("es-AR", options);
+
+  return `Semana del ${startFormatted} al ${endFormatted}, ${today.getFullYear()}`;
 }
 
+const CURRENT_WEEK = getCurrentWeekRange();
+
+const META = {
+  "/dashboard": {
+    title: "Dashboard Semanal",
+    sub: CURRENT_WEEK,
+  },
+
+  "/drafts": {
+    title: "Borradores",
+    sub: "6 borradores · 4 pendientes de revisión",
+  },
+
+  "/executions": {
+    title: "Historial de Ejecuciones",
+    sub: "Registro completo del pipeline",
+  },
+
+  "/admin": {
+    title: "Administración",
+    sub: "Configuración del sistema y usuarios",
+  },
+};
+
 export default function Topbar() {
-  const { pathname } = useLocation()
-  const navigate = useNavigate()
+  const { pathname } = useLocation();
+  const showToast = useAppStore((s) => s.showToast);
 
-  const {
-    showToast,
-    pipelineRunning,
-    pipelineStatus,
-    pipelineError,
-    pipelineAlertDismissed,
-    setPipelineRunning,
-    setPipelineStatus,
-    dismissPipelineAlert,
-  } = useAppStore()
+  const { title, sub } = META[pathname] || { title: "TalentCircle", sub: "" };
 
-  const { title, sub } = META[pathname] || { title: 'TalentCircle', sub: '' }
+  const runPipeline = () => {
+    showToast(
+      "⚙",
+      "Pipeline iniciado",
+      "Recolectando actividad de la comunidad…",
+    );
 
-  // ── Show alert bell when last execution failed and user hasn't dismissed it
-  const showAlert =
-    pipelineStatus === 'failed' && !pipelineAlertDismissed
+    setTimeout(
+      () => showToast("🤖", "Analizando con IA", "Procesando contribuciones…"),
+      2500,
+    );
 
-  // ── Trigger pipeline manually ─────────────────────────────────────────────
-  const runPipeline = async () => {
-    if (pipelineRunning) return
+    setTimeout(
+      () =>
+        showToast("✎", "Generando borradores", "Creando contenido por canal…"),
+      5000,
+    );
 
-    setPipelineRunning(true)
-    setPipelineStatus('running')
-    showToast('⚙️', 'Pipeline iniciado', 'Recolectando actividad de la comunidad…')
-
-    try {
-      const { executionId } = await adminApi.triggerExecution()
-      setPipelineStatus('completed', null, executionId)
-      showToast('✅', 'Pipeline completado', `Ejecución ${executionId} finalizada. Borradores listos.`)
-    } catch (err) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        'Error desconocido al ejecutar el pipeline.'
-      setPipelineStatus('failed', msg)
-      // Don't call showToast here — apiClient interceptor already showed it
-    } finally {
-      setPipelineRunning(false)
-    }
-  }
+    setTimeout(
+      () =>
+        showToast("✅", "Pipeline completado", "6 borradores nuevos listos"),
+      7500,
+    );
+  };
 
   return (
     <header className={styles.topbar}>
@@ -64,67 +91,26 @@ export default function Topbar() {
       </div>
 
       <div className={styles.actions}>
-        {/* ── Manual pipeline trigger button ── */}
-        <button
-          className={`${styles.btnRun} ${pipelineRunning ? styles.btnRunning : ''}`}
-          onClick={runPipeline}
-          disabled={pipelineRunning}
-          aria-label="Ejecutar pipeline manualmente"
-        >
-          {pipelineRunning ? (
-            <>
-              <span className={styles.spinner} />
-              Ejecutando…
-            </>
-          ) : (
-            <>
-              <span className={styles.pulse} />
-              <Play size={12} fill="currentColor" /> Ejecutar Pipeline
-            </>
-          )}
+        <button className={styles.btnRun} onClick={runPipeline}>
+          <span className={styles.pulse} />
+          <Play size={12} fill="currentColor" />
+          Ejecutar Pipeline
         </button>
 
-        {/* ── Alert bell — only visible when last execution failed ── */}
-        <div className={styles.bellWrapper}>
-          <button
-            className={`${styles.iconBtn} ${showAlert ? styles.iconBtnAlert : ''}`}
-            onClick={() => {
-              if (showAlert) {
-                // Navigate to executions so the user can see the error detail
-                navigate('/executions')
-              } else {
-                showToast('🔔', 'Sin alertas', 'El pipeline está funcionando correctamente.')
-              }
-            }}
-            aria-label={showAlert ? 'Ver error del pipeline' : 'Notificaciones'}
-          >
-            <Bell size={16} />
-            {showAlert && <span className={styles.alertDot} aria-hidden="true" />}
-          </button>
+        <button
+          className={styles.iconBtn}
+          onClick={() =>
+            showToast("🔔", "Sin notificaciones nuevas", "Todo está al día")
+          }
+        >
+          <Bell size={16} />
+          <span className={styles.notifDot} />
+        </button>
 
-          {/* ── Inline alert tooltip ── */}
-          {showAlert && (
-            <div className={styles.alertPopover} role="alert">
-              <AlertTriangle size={14} className={styles.alertIcon} />
-              <div className={styles.alertBody}>
-                <p className={styles.alertTitle}>Pipeline fallido</p>
-                <p className={styles.alertMsg}>{pipelineError ?? 'Revisa el historial de ejecuciones.'}</p>
-              </div>
-              <button
-                className={styles.alertClose}
-                onClick={(e) => { e.stopPropagation(); dismissPipelineAlert() }}
-                aria-label="Cerrar alerta"
-              >
-                <X size={12} />
-              </button>
-            </div>
-          )}
-        </div>
-
-        <button className={styles.iconBtn} aria-label="Más opciones">
+        <button className={styles.iconBtn}>
           <MoreVertical size={16} />
         </button>
       </div>
     </header>
-  )
+  );
 }
