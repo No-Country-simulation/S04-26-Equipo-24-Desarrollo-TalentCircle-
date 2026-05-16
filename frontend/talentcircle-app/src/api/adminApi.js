@@ -85,13 +85,12 @@ export const getExecutions = () =>
 
 /**
  * Trigger a manual pipeline execution.
- * @param {string} email - Email of the user triggering the execution.
- * @returns {Promise<void>} Resolves on HTTP 202.
+ * @returns {Promise<{ executionId: string }>}
  */
-export const triggerExecution = (email) =>
+export const triggerExecution = () =>
   apiClient
-    .post(`/api/v1/admin/executions/trigger?triggeredBy=${encodeURIComponent(email)}`)
-    .then(() => undefined)
+    .post('/api/v1/executions/trigger')
+    .then((res) => res.data)
 
 const adminApi = {
   getUsers,

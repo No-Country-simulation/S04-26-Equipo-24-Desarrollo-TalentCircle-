@@ -36,8 +36,6 @@ public class AuthService implements AuthUseCase {
     public LoginResponse login(LoginRequest request) {
         Optional<User> userOpt = userRepository.findByEmail(request.email());
 
-        // Mismo mensaje para usuario no encontrado y contraseña incorrecta
-        // evita enumerar usuarios válidos
         if (userOpt.isEmpty() || !passwordEncoder.matches(request.password(), userOpt.get().getPasswordHash())) {
             throw new ForbiddenException("Credenciales inválidas");
         }
@@ -49,7 +47,7 @@ public class AuthService implements AuthUseCase {
         }
 
         String accessToken = jwtService.generateAccessToken(user.getId(), user.getRole().name());
-        String refreshToken = jwtService.generateRefreshToken();
+        String refreshToken = jwtService.generateRefreshToken(user.getId());
 
         return new LoginResponse(
                 accessToken,
@@ -64,9 +62,24 @@ public class AuthService implements AuthUseCase {
         if (!jwtService.isValid(request.refreshToken())) {
             throw new ForbiddenException("Refresh token inválido o expirado");
         }
-        // TODO: implementar validación contra token almacenado en DB
-        throw new ForbiddenException("Refresh token inválido o expirado");
 
+        String userId = jwtService.extractUserId(request.refreshToken());
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            throw new ForbiddenException("Usuario no encontrado para refresh token");
+        }
+        User user = userOpt.get();
+        if (!user.isActive()) {
+            throw new ForbiddenException("Usuario inactivo");
+        }
+        String newAccessToken = jwtService.generateAccessToken(user.getId(), user.getRole().name());
+        String newRefreshToken = jwtService.generateRefreshToken(user.getId());
+        return new LoginResponse(
+                newAccessToken,
+                newRefreshToken,
+                "28800000",
+                new UserDto(user.getId(), user.getEmail(), user.getFullName(), user.getRole().name())
+        );
     }
 
     @Override

@@ -31,40 +31,10 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("TalentCircle Content Pipeline API")
-                        .description("""
-                                ## Pipeline de contenido comunitario automatizado
-
-                                Esta API gestiona el flujo completo: recolección de actividad comunitaria →
-                                análisis con IA → generación de borradores → revisión editorial → publicación.
-
-                                ---
-
-                                ### 🚀 Cómo empezar
-
-                                1. **Iniciar sesión** → `POST /api/v1/auth/login`
-                                   ```json
-                                   { "email": "admin@talentcircle.com", "password": "Admin123!" }
-                                   ```
-
-                                2. **Copiar el `accessToken`** de la respuesta
-
-                                3. **Hacer clic en 🔒 Authorize** (arriba a la derecha) e ingresar:
-                                   ```
-                                   Bearer eyJhbGciOiJIUzI1NiJ9...
-                                   ```
-
-                                ---
-
-                                ### 📋 Módulos disponibles
-
-                                | Módulo | Descripción |
-                                |--------|-------------|
-                                | **Auth** | Login, refresh token, logout |
-                                | **Admin** | Usuarios, fuentes, configuración del pipeline |
-                                | **Collector** | Recolección de actividad comunitaria |
-                                | **Drafts** | Panel editorial — listar, editar, aprobar, publicar |
-                                | **Executions** | Historial y ejecución manual del pipeline |
-                                """)
+                        .description("Pipeline de contenido comunitario automatizado. " +
+                                "Flujo: recoleccion de actividad → analisis IA → generacion de borradores → publicacion. " +
+                                "Modulos: Auth, Admin, Collector, Drafts, Executions. " +
+                                "Como empezar: 1) POST /api/v1/auth/login, 2) Copiar accessToken, 3) Click en Authorize.")
                         .version("1.0.0")
                         .contact(new Contact()
                                 .name("TalentCircle Team")

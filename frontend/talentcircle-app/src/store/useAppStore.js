@@ -56,6 +56,29 @@ export const useAppStore = create((set) => ({
   openModal: (id) => set({ modalDraftId: id }),
   closeModal: () => set({ modalDraftId: null }),
 
+  // ── Pipeline state ──────────────────────────────────────────────────────────
+  // 'idle' | 'running' | 'completed' | 'failed'
+  pipelineStatus: 'idle',
+  pipelineRunning: false,
+  pipelineError: null,        // mensaje de error si status === 'failed'
+  lastExecutionId: null,      // ID de la última ejecución disparada
+  pipelineAlertDismissed: false, // true cuando el usuario cierra la alerta
+
+  setPipelineRunning: (running) => set({ pipelineRunning: running }),
+  setPipelineStatus: (status, error = null, executionId = null) =>
+    set({
+      pipelineStatus: status,
+      pipelineError: error,
+      lastExecutionId: executionId ?? null,
+      pipelineAlertDismissed: false,
+    }),
+  dismissPipelineAlert: () => set({ pipelineAlertDismissed: true }),
+
+  // ── Draft counts — actualizados por Dashboard al cargar ───────────────────
+  draftTotalCount: null,    // null = aún no cargado
+  draftPendingCount: null,
+  setDraftCounts: (total, pending) => set({ draftTotalCount: total, draftPendingCount: pending }),
+
   // Data (no initial mock values — pages own their local state)
   drafts: [],
   executions: [],
