@@ -1,4 +1,4 @@
--- V7__h2__create_pipeline_config.sql (H2)
+-- V7__create_pipeline_config.sql (H2)
 -- Note: H2 does not support DEFAULT on PRIMARY KEY columns, so we insert separately.
 
 CREATE TABLE pipeline_configs (

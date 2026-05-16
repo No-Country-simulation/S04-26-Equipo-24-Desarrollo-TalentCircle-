@@ -64,7 +64,7 @@ app:
       model: ${OPENAI_MODEL:gpt-4o-mini}
     openrouter:
       api-key: ${OPENROUTER_API_KEY:}
-      model: ${OPENROUTER_MODEL:google/gemini-flash-1.5}
+      model: ${OPENROUTER_MODEL:openai/gpt-4o-mini}
 
 logging:
   pattern:

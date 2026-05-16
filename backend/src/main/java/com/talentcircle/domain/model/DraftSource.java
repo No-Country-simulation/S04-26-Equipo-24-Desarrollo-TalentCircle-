@@ -18,6 +18,10 @@ public class DraftSource extends AuditableEntity {
     @Column(name = "relevance_score")
     private Double relevanceScore;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+
     // Getters and Setters
     public Draft getDraft() { return draft; }
     public void setDraft(Draft draft) { this.draft = draft; }
@@ -27,4 +31,6 @@ public class DraftSource extends AuditableEntity {
 
     public Double getRelevanceScore() { return relevanceScore; }
     public void setRelevanceScore(Double relevanceScore) { this.relevanceScore = relevanceScore; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

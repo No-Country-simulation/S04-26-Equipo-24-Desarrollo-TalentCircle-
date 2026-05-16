@@ -342,11 +342,11 @@ src/main/resources/
 ├── application-prod.yml
 └── db/migration/
     ├── V1__create_users.sql
-    ├── V2__h2__create_weekly_executions.sql
-    ├── V3__h2__create_community_activities.sql
-    ├── V4__h2__create_ai_analyses.sql
-    ├── V5__h2__create_drafts_and_versions.sql
-    ├── V6__h2__create_publications.sql
+    ├── V2__create_weekly_executions.sql
+    ├── V3__create_community_activities.sql
+    ├── V4__create_ai_analyses.sql
+    ├── V5__create_drafts_and_versions.sql
+    ├── V6__create_publications.sql
     ├── V7__create_community_sources.sql
     └── V8__create_pipeline_config.sql
 ```

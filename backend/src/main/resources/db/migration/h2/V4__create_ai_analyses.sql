@@ -1,4 +1,4 @@
--- V4__h2__create_ai_analyses.sql (H2)
+-- V4__create_ai_analyses.sql (H2)
 
 CREATE TABLE ai_analyses (
     id VARCHAR(36) PRIMARY KEY,

@@ -1,4 +1,4 @@
--- V5__h2__create_drafts_and_versions.sql (H2)
+-- V5__create_drafts_and_versions.sql (H2)
 
 CREATE TABLE drafts (
     id VARCHAR(36) PRIMARY KEY,
@@ -28,6 +28,7 @@ CREATE TABLE draft_versions (
     edited_at TIMESTAMP,
     version_number INT DEFAULT 1,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (draft_id) REFERENCES drafts(id)
 );
 
@@ -39,6 +40,7 @@ CREATE TABLE draft_sources (
     activity_id VARCHAR(36) NOT NULL,
     relevance_score DECIMAL(4,2),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (draft_id) REFERENCES drafts(id),
     FOREIGN KEY (activity_id) REFERENCES community_activities(id)
 );

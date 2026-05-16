@@ -1,4 +1,4 @@
--- V3__h2__create_community_activities.sql (H2)
+-- V3__create_community_activities.sql (H2)
 
 CREATE TABLE community_activities (
     id VARCHAR(36) PRIMARY KEY,
@@ -13,6 +13,8 @@ CREATE TABLE community_activities (
     author VARCHAR(255),
     published_at TIMESTAMP,
     source_url CLOB,
+    discord_message_id VARCHAR(255) UNIQUE,
+    discord_channel_id VARCHAR(255),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (execution_id) REFERENCES weekly_executions(id)

@@ -1,4 +1,4 @@
--- V8__h2__seed_default_config.sql (H2)
+-- V8__seed_default_config.sql (H2)
 -- Seed default pipeline configuration with base prompts for each channel
 -- RF-10: Configuración de Prompts
 

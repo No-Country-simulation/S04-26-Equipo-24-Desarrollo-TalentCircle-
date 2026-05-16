@@ -1,4 +1,4 @@
--- V6__h2__create_publications.sql (H2)
+-- V6__create_publications.sql (H2)
 
 CREATE TABLE publications (
     id VARCHAR(36) PRIMARY KEY,

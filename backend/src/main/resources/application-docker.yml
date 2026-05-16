@@ -50,6 +50,19 @@ app:
   cors:
     allowed-origins: http://localhost:5173
 
+  discord:
+    bot-token: ${DISCORD_BOT_TOKEN:}
+    guild-id: ${DISCORD_GUILD_ID:}
+
+  llm:
+    provider: ${LLM_PROVIDER:openrouter}
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      model: gpt-4o-mini
+    openrouter:
+      api-key: ${OPENROUTER_API_KEY:}
+      model: ${OPENROUTER_MODEL:openai/gpt-4o-mini}
+
 springdoc:
   api-docs:
     path: /v3/api-docs
