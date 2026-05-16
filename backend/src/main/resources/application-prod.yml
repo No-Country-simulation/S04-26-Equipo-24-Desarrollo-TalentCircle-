@@ -18,7 +18,7 @@ app:
 
   cors:
     allowed-origins: ${FRONTEND_URL:http://localhost:5173}
-  
+
   llm:
     provider: ${LLM_PROVIDER:openai}
     openai:

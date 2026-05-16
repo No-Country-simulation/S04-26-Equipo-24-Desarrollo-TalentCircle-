@@ -1,30 +1,10 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: talentcircle-postgres
-    environment:
-      POSTGRES_DB: talentcircle
-      POSTGRES_USER: talentcircle
-      POSTGRES_PASSWORD: talentcircle
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U talentcircle"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - talentcircle-network
-
+  # Redis para caché y mensajería
   redis:
     image: redis:7-alpine
     container_name: talentcircle-redis
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
@@ -35,38 +15,57 @@ services:
       retries: 5
     networks:
       - talentcircle-network
+    restart: always
 
+  # Backend Java ARM64
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: chuycode/talentcircle-backend:v0.1.1
     container_name: talentcircle-backend
-    ports:
-      - "8080:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - DATABASE_URL=jdbc:postgresql://postgres:5432/talentcircle
-      - DATABASE_USER=talentcircle
-      - DATABASE_PASSWORD=talentcircle
-      - JWT_SECRET=${JWT_SECRET}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - LINKEDIN_ACCESS_TOKEN=${LINKEDIN_ACCESS_TOKEN}
-      - LINKEDIN_PERSON_ID=${LINKEDIN_PERSON_ID}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - FRONTEND_URL=${FRONTEND_URL}
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:talentcircle_db;DB_CLOSE_DELAY=-1
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.h2.Driver
+      - SPRING_DATASOURCE_USERNAME=sa
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.H2Dialect
+      - SPRING_FLYWAY_ENABLED=true
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - JWT_SECRET=el-secreto-esMuySeguro
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     networks:
       - talentcircle-network
     restart: unless-stopped
 
+  # Frontend React
+  frontend:
+    image: chuycode/talentcircle-frontend:v5.0
+    container_name: talentcircle-frontend
+    # Puertos removidos: el tráfico entra por el gateway
+    depends_on:
+      - backend
+    networks:
+      - talentcircle-network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy (Puerta de entrada única)
+  gateway:
+    image: nginx:alpine
+    container_name: talentcircle-gateway
+    ports:
+      - "1024:80"
+    volumes:
+      - /home/ubuntu/talentcircle/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - talentcircle-network
+    restart: always
+
 volumes:
-  postgres_data:
   redis_data:
 
 networks:

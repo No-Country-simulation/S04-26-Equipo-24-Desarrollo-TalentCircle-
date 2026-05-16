@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
-import org.springframework.core.env.Profiles;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -38,61 +37,42 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        boolean isDevProfile = environment.acceptsProfiles(Profiles.of("dev"));
-
-        http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> {
-                if (isDevProfile) {
-                    csrf.ignoringRequestMatchers("/h2-console/**").disable();
-                } else {
-                    csrf.disable();
-                }
-            })
-            .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> {
-                if (isDevProfile) {
-                    auth.requestMatchers("/h2-console/**").permitAll();
-                }
-                auth
-                    .requestMatchers("/api/v1/auth/**").permitAll()
-                    .requestMatchers("/api/v1/test/**").permitAll()
-                    .requestMatchers("/webhooks/**").permitAll()
-                    .requestMatchers("/actuator/health").permitAll()
-                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                    .anyRequest().authenticated();
-            })
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
-        if (isDevProfile) {
-            http.headers(headers ->
-                headers.frameOptions(frame -> frame.sameOrigin()));
-        }
-
-        return http.build();
+        return http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // Permitir frames para que la consola de H2 no de error de "Connection Refused"
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/webhooks/**").permitAll()
+                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        List<String> origins = List.of(allowedOrigins.split(","));
-        config.setAllowedOrigins(origins.stream().map(String::trim).toList());
+        // 1. Permitir CUALQUIER origen sin depender del application.yml
+        config.setAllowedOriginPatterns(List.of("*"));
 
+        // 2. Todos los métodos para que el front fluya
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
-        config.setAllowedHeaders(List.of(
-                "Authorization",
-                "Content-Type",
-                "Accept",
-                "X-Requested-With",
-                "Cache-Control"
-        ));
+        // 3. Permitir todos los headers (evita líos con Content-Type o Custom Headers)
+        config.setAllowedHeaders(List.of("*"));
 
+        // 4. Exponer Authorization para que el front pueda guardar el Token
         config.setExposedHeaders(List.of("Authorization"));
 
-        config.setAllowCredentials(true);
+        // 5. IMPORTANTE: En modo abierto total con patterns "*", esto debe ser false
+        config.setAllowCredentials(false);
 
         config.setMaxAge(3600L);
 
