@@ -8,7 +8,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class LinkedInClientAdapter implements LinkedInClientPort {
 
+    @Value("${app.linkedin.access-token:}")
     private final String accessToken;
+
+    @Value("${app.linkedin.person-id:}")
     private final String personId;
 
     public LinkedInClientAdapter(@Value("${app.linkedin.access-token:}") String accessToken,
