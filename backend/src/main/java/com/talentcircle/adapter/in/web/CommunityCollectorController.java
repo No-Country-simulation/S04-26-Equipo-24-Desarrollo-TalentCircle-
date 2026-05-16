@@ -28,10 +28,6 @@ public class CommunityCollectorController {
         this.collectorUseCase = collectorUseCase;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // POST /collect
-    // ─────────────────────────────────────────────────────────────────────────
-
     @Operation(
         summary = "Disparar recolección manual",
         description = "Inicia la recolección de actividad comunitaria para una fuente específica " +
@@ -54,10 +50,6 @@ public class CommunityCollectorController {
         return ResponseEntity.accepted().build();
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // GET /activities
-    // ─────────────────────────────────────────────────────────────────────────
-
     @Operation(
         summary = "Listar actividades recolectadas",
         description = "Retorna todas las actividades comunitarias recolectadas para una ejecución específica. " +
@@ -67,30 +59,7 @@ public class CommunityCollectorController {
         @ApiResponse(responseCode = "200", description = "Lista de actividades recolectadas",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                 examples = @ExampleObject(value = """
-                    [
-                      {
-                        "id": "act-001",
-                        "title": "¿Cómo mejorar tu perfil de LinkedIn para conseguir trabajo?",
-                        "content": "Hola comunidad, quería compartir algunos tips que me funcionaron...",
-                        "type": "POST",
-                        "reactionCount": 47,
-                        "responseCount": 23,
-                        "shareCount": 12,
-                        "author": "María García",
-                        "sourceUrl": "https://discord.com/channels/123/456/789"
-                      },
-                      {
-                        "id": "act-002",
-                        "title": "Recurso: Guía completa de entrevistas técnicas 2026",
-                        "content": "Comparto esta guía que encontré muy útil...",
-                        "type": "RESOURCE",
-                        "reactionCount": 89,
-                        "responseCount": 5,
-                        "shareCount": 34,
-                        "author": "Carlos López",
-                        "sourceUrl": "https://discord.com/channels/123/456/790"
-                      }
-                    ]
+                    [{"id": "act-001", "title": "¿Cómo mejorar tu perfil de LinkedIn?", "content": "Tips que me funcionaron...", "type": "POST", "reactionCount": 47, "responseCount": 23, "shareCount": 12, "author": "María García", "sourceUrl": "https://discord.com/channels/123/456/789"}, {"id": "act-002", "title": "Guía completa de entrevistas técnicas 2026", "content": "Comparto esta guía que encontré muy útil...", "type": "RESOURCE", "reactionCount": 89, "responseCount": 5, "shareCount": 34, "author": "Carlos López", "sourceUrl": "https://discord.com/channels/123/456/790"}]
                     """))),
         @ApiResponse(responseCode = "404", description = "Ejecución no encontrada")
     })

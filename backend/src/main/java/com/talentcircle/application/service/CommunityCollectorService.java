@@ -54,6 +54,10 @@ public class CommunityCollectorService implements CommunityCollectorUseCase {
 
         log.info("Recolectadas {} actividades de '{}'", activities.size(), source.getName());
 
+        if (!activities.isEmpty()) {
+            activityRepository.saveAll(activities);
+        }
+
         execution.setStatus(WeeklyExecution.ExecutionStatus.COMPLETED);
         execution.setCompletedAt(LocalDateTime.now());
         executionRepository.save(execution);

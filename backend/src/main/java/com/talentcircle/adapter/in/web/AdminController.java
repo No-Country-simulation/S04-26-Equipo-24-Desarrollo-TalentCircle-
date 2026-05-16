@@ -41,22 +41,7 @@ public class AdminController {
         @ApiResponse(responseCode = "200", description = "Lista de usuarios",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                 examples = @ExampleObject(value = """
-                    [
-                      {
-                        "id": "550e8400-e29b-41d4-a716-446655440000",
-                        "email": "admin@talentcircle.com",
-                        "fullName": "Admin TalentCircle",
-                        "role": "ADMIN",
-                        "active": true
-                      },
-                      {
-                        "id": "660e8400-e29b-41d4-a716-446655440001",
-                        "email": "editor@talentcircle.com",
-                        "fullName": "Editor TalentCircle",
-                        "role": "EDITOR",
-                        "active": true
-                      }
-                    ]
+                    [{"id": "550e8400-e29b-41d4-a716-446655440000", "email": "admin@talentcircle.com", "fullName": "Admin TalentCircle", "role": "ADMIN", "active": true}, {"id": "660e8400-e29b-41d4-a716-446655440001", "email": "editor@talentcircle.com", "fullName": "Editor TalentCircle", "role": "EDITOR", "active": true}]
                     """))),
         @ApiResponse(responseCode = "401", description = "No autenticado"),
         @ApiResponse(responseCode = "403", description = "Sin permisos de ADMIN")
@@ -75,25 +60,14 @@ public class AdminController {
         @ApiResponse(responseCode = "200", description = "Usuario creado",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                 examples = @ExampleObject(value = """
-                    {
-                      "id": "770e8400-e29b-41d4-a716-446655440002",
-                      "email": "editor2@talentcircle.com",
-                      "fullName": "Editor Dos",
-                      "role": "EDITOR",
-                      "active": true
-                    }
+                    {"id": "770e8400-e29b-41d4-a716-446655440002", "email": "editor2@talentcircle.com", "fullName": "Editor Dos", "role": "EDITOR", "active": true}
                     """))),
         @ApiResponse(responseCode = "409", description = "Email ya registrado")
     })
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
         required = true,
         content = @Content(examples = @ExampleObject(value = """
-            {
-              "email": "editor2@talentcircle.com",
-              "password": "Editor123!",
-              "fullName": "Editor Dos",
-              "role": "EDITOR"
-            }
+            {"email": "editor2@talentcircle.com", "password": "Editor123!", "fullName": "Editor Dos", "role": "EDITOR"}
             """))
     )
     @PostMapping("/users")
@@ -113,11 +87,7 @@ public class AdminController {
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
         required = true,
         content = @Content(examples = @ExampleObject(value = """
-            {
-              "fullName": "Editor Actualizado",
-              "role": "EDITOR",
-              "active": true
-            }
+            {"fullName": "Editor Actualizado", "role": "EDITOR", "active": true}
             """))
     )
     @PutMapping("/users/{id}")
@@ -141,14 +111,7 @@ public class AdminController {
         @ApiResponse(responseCode = "200", description = "Lista de fuentes",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                 examples = @ExampleObject(value = """
-                    [
-                      {
-                        "id": "src-001",
-                        "name": "Discord TalentCircle",
-                        "type": "DISCORD",
-                        "active": true
-                      }
-                    ]
+                    [{"id": "src-001", "name": "Discord TalentCircle", "type": "DISCORD", "active": true}]
                     """)))
     })
     @GetMapping("/sources")
@@ -169,12 +132,7 @@ public class AdminController {
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
         required = true,
         content = @Content(examples = @ExampleObject(value = """
-            {
-              "name": "Discord TalentCircle",
-              "type": "DISCORD",
-              "apiUrl": "https://discord.com/api/v10",
-              "apiKey": "Bot TOKEN_AQUI"
-            }
+            {"name": "Discord TalentCircle", "type": "DISCORD", "apiUrl": "https://discord.com/api/v10", "apiKey": "Bot TOKEN_AQUI"}
             """))
     )
     @PostMapping("/sources")
@@ -194,12 +152,7 @@ public class AdminController {
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
         required = true,
         content = @Content(examples = @ExampleObject(value = """
-            {
-              "name": "Discord TalentCircle v2",
-              "apiUrl": "https://discord.com/api/v10",
-              "apiKey": "Bot NUEVO_TOKEN",
-              "active": true
-            }
+            {"name": "Discord TalentCircle v2", "apiUrl": "https://discord.com/api/v10", "apiKey": "Bot NUEVO_TOKEN", "active": true}
             """))
     )
     @PutMapping("/sources/{id}")
@@ -241,15 +194,7 @@ public class AdminController {
         @ApiResponse(responseCode = "200", description = "Configuración actual",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                 examples = @ExampleObject(value = """
-                    {
-                      "llmProvider": "openai",
-                      "llmModel": "gpt-4o",
-                      "newsletterPrompt": "Genera un newsletter en español sobre los temas más relevantes...",
-                      "linkedinPrompt": "Crea un post de LinkedIn profesional...",
-                      "twitterPrompt": "Crea un tweet conciso de máximo 280 caracteres...",
-                      "maxItemsPerChannel": 10,
-                      "scheduleCron": "0 0 18 * * FRI"
-                    }
+                    {"llmProvider": "openai", "llmModel": "gpt-4o", "newsletterPrompt": "Genera un newsletter en español sobre los temas más relevantes...", "linkedinPrompt": "Crea un post de LinkedIn profesional...", "twitterPrompt": "Crea un tweet conciso de máximo 280 caracteres...", "maxItemsPerChannel": 10, "scheduleCron": "0 0 18 * * FRI"}
                     """)))
     })
     @GetMapping("/config")
@@ -271,15 +216,7 @@ public class AdminController {
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
         required = true,
         content = @Content(examples = @ExampleObject(value = """
-            {
-              "llmProvider": "openai",
-              "llmModel": "gpt-4o",
-              "newsletterPrompt": "Genera un newsletter semanal en español...",
-              "linkedinPrompt": "Crea un post de LinkedIn de 150-300 palabras...",
-              "twitterPrompt": "Crea un tweet de máximo 280 caracteres...",
-              "maxItemsPerChannel": 10,
-              "scheduleCron": "0 0 18 * * FRI"
-            }
+            {"llmProvider": "openai", "llmModel": "gpt-4o", "newsletterPrompt": "Genera un newsletter semanal en español...", "linkedinPrompt": "Crea un post de LinkedIn de 150-300 palabras...", "twitterPrompt": "Crea un tweet de máximo 280 caracteres...", "maxItemsPerChannel": 10, "scheduleCron": "0 0 18 * * FRI"}
             """))
     )
     @PutMapping("/config")
@@ -300,16 +237,7 @@ public class AdminController {
         @ApiResponse(responseCode = "200", description = "Lista de ejecuciones",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                 examples = @ExampleObject(value = """
-                    [
-                      {
-                        "id": "exec-001",
-                        "weekStart": "2026-04-28",
-                        "weekEnd": "2026-05-02",
-                        "status": "COMPLETED",
-                        "startedAt": "2026-05-02T18:00:00",
-                        "completedAt": "2026-05-02T18:15:32"
-                      }
-                    ]
+                    [{"id": "exec-001", "weekStart": "2026-04-28", "weekEnd": "2026-05-02", "status": "COMPLETED", "startedAt": "2026-05-02T18:00:00", "completedAt": "2026-05-02T18:15:32"}]
                     """)))
     })
     @GetMapping("/executions")

@@ -1,0 +1,191 @@
+📋 RESUMEN DE REQUERIMIENTOS - TALENTCIRCLE AI PIPELINE
+
+
+1. DESCRIPCIÓN GENERAL DEL PROYECTO
+TalentCircle es una plataforma automatizada que recopila actividad semanal de comunidades técnicas, la analiza con IA y genera contenido diferenciado para múltiples canales (Newsletter, LinkedIn, Twitter/X).
+
+Problema a resolver:
+
+Proceso editorial manual que consume 4-6 horas/semana
+Pérdida de contenido valioso por falta de detección oportuna
+Formatos inconsistentes entre canales
+
+
+2. FUNCIONALIDADES PRINCIPALES DE LA IA
+La IA debe realizar las siguientes tareas dentro de la aplicación:
+
+🔍 Módulo: AI Analyzer
+Análisis de Relevancia: Evaluar cada item recolectado y asignar puntuación 1-10
+Identificación de Temas: Detectar 3-5 temas más relevantes de la semana
+Resumen Ejecutivo: Generar resumen de actividad semanal en español
+Clustering Semántico: Agrupar por temática usando embeddings
+Prompts Configurables: Permitir personalización por canal (newsletter, LinkedIn, Twitter)
+✍️ Módulo: Draft Generator
+
+
+
+Generar 3 tipos de borrador diferenciados:
+
+Canal	Formato	Longitud	Características
+Newsletter	Largo	800-1200 palabras	Secciones, título, CTAs
+LinkedIn	Mediano	150-300 palabras	Tono profesional, emojis moderados
+Twitter/X	Muy corto	Hasta 280 caracteres	Hashtags relevantes
+
+
+3. CASOS DE USO CLAVE
+UC-01: Ejecutar Pipeline Semanal ⏰
+Trigger: Todos los viernes a las 18:00 (automático o manual)
+Proceso:
+Recolectar posts, preguntas, recursos más reaccionados
+Llamar LLM para análisis
+Generar borradores por canal
+Persistir en BD con estado PENDIENTE
+UC-02: Revisar y Aprobar Borrador ✅
+Editor visualiza borradores
+Edita contenido inline
+Aprueba/rechaza con comentarios
+Mantiene historial de cambios
+UC-03: Publicar en LinkedIn 📤
+Publicar directamente via LinkedIn API v2
+Reintentos automáticos (hasta 3 veces)
+Registro de publicación con timestamp
+UC-04: Exportar Borradores 💾
+Exportar en JSON o CSV
+Selectivo por período y canal
+Descarga automática
+
+
+4. REQUISITOS FUNCIONALES DE LA IA
+ID	Requisito	Prioridad	Detalles
+RF-07	Análisis de Relevancia	ALTA	LLM asigna score 1-10 a cada item
+RF-08	Selección de Temas	ALTA	Identificar 3-5 temas más relevantes
+RF-09	Resumen Ejecutivo	ALTA	Generar resumen en español
+RF-10	Prompts Configurables	MEDIA	Editables desde admin panel
+RF-11	Multi-LLM	MEDIA	Soportar OpenAI GPT-4 y Claude Sonnet
+RF-12	Borrador Newsletter	ALTA	800-1200 palabras, secciones, CTAs
+RF-13	Borrador LinkedIn	ALTA	150-300 palabras, profesional
+RF-14	Borrador Twitter	ALTA	Máx 280 caracteres, hashtags
+RF-15	Vinculación de Fuentes	ALTA	Referenciar posts/recursos originales
+RF-16	Versiones de Borrador	MEDIA	Mantener historial de ediciones
+5. ARQUITECTURA DE LA IA
+Code
+┌─────────────────────────────────────────────┐
+│        PIPELINE DE PROCESAMIENTO            │
+├─────────────────────────────────────────────┤
+│                                             │
+│  Viernes 18:00 → COMMUNITY COLLECTOR       │
+│      ↓                                      │
+│  Viernes 18:30 → AI ANALYZER (LLM)         │
+│      ↓                                      │
+│  Viernes 19:00 → DRAFT GENERATOR           │
+│      ↓                                      │
+│  Lunes AM → EDITORIAL PANEL (Review)       │
+│      ↓                                      │
+│  PUBLISHER (LinkedIn API / Export)         │
+│                                             │
+└─────────────────────────────────────────────┘
+Servicios Backend:
+
+community-collector: Recolecta actividad de Discord, Circle.so, Slack
+ai-analyzer: Llama LLM (OpenAI/Claude), genera análisis
+draft-generator: Crea 3 borradores por canal
+review-api: Endpoints para panel editorial
+publisher: Publica en LinkedIn o exporta
+Stack LLM:
+
+Proveedores: OpenAI GPT-4 o Anthropic Claude
+Comunicación: HTTP client con prompts estructurados
+Cache: Resultados almacenados para reutilización
+
+
+6. FLUJO DE DATOS END-TO-END
+Code
+Viernes 18:00  → Job scheduler activa recolección
+Viernes 18:05  → Community Collector llama APIs, persiste en BD
+Viernes 18:30  → AI Analyzer lee datos, llama LLM, persiste análisis
+Viernes 19:00  → Draft Generator crea borradores (PENDIENTE)
+Lunes AM       → Editor abre panel, revisa borradores
+Lunes AM       → Editor aprueba → Publisher invoca LinkedIn API
+
+
+
+7. MÓDULO: AI ANALYZER - PROMPTS CONFIGURABLES
+El admin puede personalizar prompts por canal:
+
+JSON
+{
+  "newsletter_prompt": "Analiza estos posts... Genera un resumen ejecutivo de 800-1200 palabras",
+  "linkedin_prompt": "Crea un post profesional de 150-300 palabras con tono positivo",
+  "twitter_prompt": "Genera un tweet de máximo 280 caracteres con hashtags"
+}
+
+
+
+8. MÓDULO: DRAFT GENERATOR - ESTRUCTURA
+Cada borrador incluye:
+
+ID única
+Canal: Newsletter | LinkedIn | Twitter
+Contenido: Texto generado por IA
+Estado: PENDING → APPROVED → PUBLISHED
+AI Score: 1-10 (relevancia asignada por LLM)
+Fuentes: Referencias a posts/recursos originales
+Historial de versiones: Cada edición guardada
+
+
+
+9. REQUISITOS NO FUNCIONALES PARA LA IA
+RNF	Requisito
+RNF-02	Pipeline completo debe completarse <60 minutos
+RNF-05	Si LLM falla → registrar error, notificar ADMIN, no perder datos
+RNF-06	Persistencia ante fallos: datos recolectados guardados antes de IA
+RNF-08	Secretos (API keys): variables de entorno, nunca en texto claro
+RNF-11	Deployment containerizado (Docker)
+RNF-14	Observabilidad: métricas Prometheus, trazas Jaeger
+10. ROLES DEL USUARIO
+Rol	Permisos	Interacción con IA
+Editor	Ver/editar/aprobar borradores	Revisa contenido generado, edita inline
+Admin	Configurar sistema	Ajusta prompts, LLM provider, ejecución manual
+Comunidad	Crear contenido (indirecto)	Sus posts alimentan el pipeline
+11. PLAN DE SPRINTS (14 semanas)
+Sprint 3: IA Analyzer + Draft Generator (Semanas 6-7)
+
+Integración LLM API
+Generación por canal
+Persistencia de drafts
+Sprint 4: Panel Editorial (Semanas 8-9)
+
+Revisión de borradores
+Edición inline
+Flujo de aprobación
+12. RIESGOS IDENTIFICADOS
+Riesgo	Mitigación
+API LLM no disponible	Circuit breaker, cache, fallback
+Costos LLM altos	Límites de tokens configurables, monitoreo
+Calidad insuficiente	Prompts iterativos, revisión obligatoria
+Cambios LinkedIn API	Abstracción con interfaces, exportación JSON
+13. ARCHIVOS EN DOC/
+Code
+📁 Doc/
+├── Requerimientos de no country.txt ← Descripción inicial
+├── requisitos_extracted.txt ← Documento completo (35KB)
+├── TalentCircle_Analisis_Requisitos.docx ← Documento Word
+└── Arquitectura y descripcion.jpeg ← Diagrama visual
+
+
+
+🎯 RESUMEN EJECUTIVO PARA LA IA
+La IA debe ser un pipeline automatizado que:
+
+Recolecta actividad semanal de comunidades (posts, preguntas, recursos)
+Analiza con LLM para identificar relevancia y temas (1-10 score)
+Genera 3 borradores diferenciados por canal (newsletter/LinkedIn/Twitter)
+Persiste en BD con estado PENDIENTE
+Facilita revisión editorial con panel de UI
+Publica automáticamente en LinkedIn o exporta JSON/CSV
+Registra auditoría completa de cambios
+Stack AI: OpenAI GPT-4 o Claude + Spring Boot + PostgreSQL + React
+
+¿Necesitas que profundice en algún módulo específico o que ayude con la implementación?
+
+crea una con todo lo que presentas, crea una carpeta AI Spect con los documentos desing.md, requirements.md y tasks.md para entrenar un AI_Agent.md

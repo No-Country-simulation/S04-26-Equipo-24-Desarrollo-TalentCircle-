@@ -5,10 +5,19 @@ import com.talentcircle.domain.model.CommunityActivity;
 import com.talentcircle.domain.port.out.LlmClientPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URI;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @RestController
 @RequestMapping("/api/v1/test/openai")
@@ -16,9 +25,14 @@ import java.util.List;
 public class OpenAiTestController {
 
     private final LlmClientPort llmClient;
+    private final String apiKey;
 
-    public OpenAiTestController(LlmClientPort llmClient) {
+    private final ExecutorService executor = Executors.newCachedThreadPool();
+
+    public OpenAiTestController(LlmClientPort llmClient,
+                                @Value("${app.llm.openai.api-key:}") String apiKey) {
         this.llmClient = llmClient;
+        this.apiKey = apiKey;
     }
 
     @GetMapping("/ping")
@@ -30,7 +44,6 @@ public class OpenAiTestController {
             if (apiKey != null && !apiKey.isEmpty()) {
                 valid = llmClient.validateConnection(apiKey);
             } else {
-                // Usar la key configurada en el sistema
                 CommunityActivity dummy = new CommunityActivity();
                 dummy.setTitle("Test Activity");
                 dummy.setContent("This is a test message about technology trends.");
@@ -89,6 +102,66 @@ public class OpenAiTestController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
+    }
+
+    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "Streaming de respuesta OpenAI (SSE)",
+               description = "Envía un prompt a OpenAI y recibe la respuesta token por token via Server-Sent Events")
+    public SseEmitter streamResponse(
+            @RequestParam(defaultValue = "Hola, cuéntame sobre tecnología en español.") String prompt) {
+        SseEmitter emitter = new SseEmitter(120_000L);
+
+        executor.execute(() -> {
+            try {
+                String body = String.format("""
+                        {
+                          "model": "gpt-4o-mini",
+                          "messages": [
+                            {"role": "system", "content": "Eres un asistente útil que responde en español."},
+                            {"role": "user", "content": "%s"}
+                          ],
+                          "stream": true,
+                          "max_tokens": 500
+                        }
+                        """, prompt.replace("\"", "\\\""));
+
+                URI uri = URI.create("https://api.openai.com/v1/chat/completions");
+                HttpURLConnection conn = (HttpURLConnection) uri.toURL().openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setRequestProperty("Authorization", "Bearer " + apiKey);
+                conn.setDoOutput(true);
+                conn.setConnectTimeout(30000);
+                conn.setReadTimeout(60000);
+
+                conn.getOutputStream().write(body.getBytes());
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.startsWith("data: ")) {
+                        String data = line.substring(6);
+                        if ("[DONE]".equals(data)) {
+                            break;
+                        }
+                        emitter.send(SseEmitter.event()
+                                .name("token")
+                                .data(data, MediaType.APPLICATION_JSON));
+                    }
+                }
+                reader.close();
+                emitter.complete();
+            } catch (Exception e) {
+                try {
+                    emitter.send(SseEmitter.event()
+                            .name("error")
+                            .data("Error: " + e.getMessage()));
+                } catch (Exception ignored) {}
+                emitter.completeWithError(e);
+            }
+        });
+
+        return emitter;
     }
 
     public record ChatRequest(

@@ -25,10 +25,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * REST controller for draft management.
- * RF-17 to RF-26: Panel Editorial + Publicación y Exportación.
- */
 @RestController
 @RequestMapping("/api/v1/drafts")
 @Tag(name = "Drafts", description = "Gestión del panel editorial de borradores")
@@ -44,10 +40,6 @@ public class DraftController {
         this.publicationUseCase = publicationUseCase;
     }
 
-    // -------------------------------------------------------------------------
-    // GET /api/v1/drafts — RF-17: Listado paginado con filtros
-    // -------------------------------------------------------------------------
-
     @Operation(
         summary = "Listar borradores",
         description = "Retorna borradores con filtros opcionales. " +
@@ -58,15 +50,7 @@ public class DraftController {
         @ApiResponse(responseCode = "200", description = "Lista de borradores",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                 examples = @ExampleObject(value = """
-                    [
-                      {
-                        "id": "draft-001",
-                        "channel": "NEWSLETTER",
-                        "status": "PENDING",
-                        "createdAt": "2026-05-02T18:15:00",
-                        "summary": "Resumen de la semana: los temas más relevantes..."
-                      }
-                    ]
+                    [{"id": "draft-001", "channel": "NEWSLETTER", "status": "PENDING", "createdAt": "2026-05-02T18:15:00", "summary": "Resumen de la semana: los temas más relevantes..."}]
                     """))),
         @ApiResponse(responseCode = "401", description = "No autenticado")
     })
@@ -95,10 +79,6 @@ public class DraftController {
                 draftReviewUseCase.listDrafts(channel, status, weekStart, weekEnd, page, size));
     }
 
-    // -------------------------------------------------------------------------
-    // GET /api/v1/drafts/{id} — RF-18: Vista detalle con fuentes y versiones
-    // -------------------------------------------------------------------------
-
     @Operation(
         summary = "Detalle de un borrador",
         description = "Retorna el contenido completo del borrador, incluyendo actividades fuente " +
@@ -116,10 +96,6 @@ public class DraftController {
 
         return ResponseEntity.ok(draftReviewUseCase.getDraftDetail(id));
     }
-
-    // -------------------------------------------------------------------------
-    // PATCH /api/v1/drafts/{id}/content — RF-19: Edición inline
-    // -------------------------------------------------------------------------
 
     @Operation(
         summary = "Editar contenido del borrador",
@@ -140,10 +116,6 @@ public class DraftController {
         return ResponseEntity.ok(draftReviewUseCase.updateContent(id, request));
     }
 
-    // -------------------------------------------------------------------------
-    // POST /api/v1/drafts/{id}/approve — RF-20: Aprobación
-    // -------------------------------------------------------------------------
-
     @Operation(
         summary = "Aprobar borrador",
         description = "Cambia el estado a `APPROVED`. Solo borradores en estado `PENDING` pueden aprobarse."
@@ -162,10 +134,6 @@ public class DraftController {
 
         return ResponseEntity.ok(draftReviewUseCase.approveDraft(id));
     }
-
-    // -------------------------------------------------------------------------
-    // POST /api/v1/drafts/{id}/reject — RF-20: Rechazo con comentario
-    // -------------------------------------------------------------------------
 
     @Operation(
         summary = "Rechazar borrador",
@@ -186,10 +154,6 @@ public class DraftController {
         return ResponseEntity.ok(draftReviewUseCase.rejectDraft(id, request));
     }
 
-    // -------------------------------------------------------------------------
-    // POST /api/v1/drafts/{id}/publish — RF-23: Publicación en LinkedIn
-    // -------------------------------------------------------------------------
-
     @Operation(
         summary = "Publicar borrador en LinkedIn",
         description = "Publica el borrador aprobado directamente en LinkedIn via API v2. " +
@@ -208,10 +172,6 @@ public class DraftController {
 
         return ResponseEntity.ok(publicationUseCase.publishDraft(id));
     }
-
-    // -------------------------------------------------------------------------
-    // GET /api/v1/drafts/export — RF-24/RF-25: Exportación JSON o CSV
-    // -------------------------------------------------------------------------
 
     @Operation(
         summary = "Exportar borradores aprobados",

@@ -7,6 +7,7 @@ import com.talentcircle.domain.port.in.CommunityCollectorUseCase;
 import com.talentcircle.domain.port.out.CommunityActivityRepository;
 import com.talentcircle.domain.port.out.CommunitySourceRepository;
 import com.talentcircle.domain.port.out.WeeklyExecutionRepository;
+import com.talentcircle.application.service.DiscordCollectorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,6 +36,9 @@ class CommunityCollectorServiceTest {
 
     @Mock
     private CommunitySourceRepository sourceRepository;
+
+    @Mock
+    private DiscordCollectorService discordCollectorService;
 
     @InjectMocks
     private CommunityCollectorService collectorService;
@@ -77,15 +81,22 @@ class CommunityCollectorServiceTest {
 
     @Test
     void collectActivity_shouldCollectFromDiscordSource() {
+        CommunityActivity fakeActivity = new CommunityActivity();
+        fakeActivity.setId("act-discord-1");
+        fakeActivity.setTitle("Discord Activity");
+
         when(executionRepository.findById("exec-123")).thenReturn(Optional.of(testExecution));
         when(sourceRepository.findById("source-discord-123")).thenReturn(Optional.of(testDiscordSource));
-        when(activityRepository.save(any(CommunityActivity.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(discordCollectorService.collectWeeklyActivities(any(), any()))
+                .thenReturn(List.of(fakeActivity));
+        when(activityRepository.saveAll(anyList())).thenAnswer(inv -> inv.getArgument(0));
 
         collectorService.collectActivity("exec-123", "source-discord-123");
 
         verify(executionRepository, times(1)).findById("exec-123");
         verify(sourceRepository, times(1)).findById("source-discord-123");
-        verify(activityRepository, atLeastOnce()).save(any(CommunityActivity.class));
+        verify(discordCollectorService, times(1)).collectWeeklyActivities(any(), any());
+        verify(activityRepository, atLeastOnce()).saveAll(anyList());
         verify(executionRepository, times(1)).save(testExecution);
 
         assertEquals(WeeklyExecution.ExecutionStatus.COMPLETED, testExecution.getStatus());
@@ -96,13 +107,13 @@ class CommunityCollectorServiceTest {
     void collectActivity_shouldCollectFromCircleSource() {
         when(executionRepository.findById("exec-123")).thenReturn(Optional.of(testExecution));
         when(sourceRepository.findById("source-circle-123")).thenReturn(Optional.of(testCircleSource));
-        when(activityRepository.save(any(CommunityActivity.class))).thenAnswer(inv -> inv.getArgument(0));
 
         collectorService.collectActivity("exec-123", "source-circle-123");
 
         verify(executionRepository, times(1)).findById("exec-123");
         verify(sourceRepository, times(1)).findById("source-circle-123");
-        verify(activityRepository, atLeastOnce()).save(any(CommunityActivity.class));
+        verify(discordCollectorService, never()).collectWeeklyActivities(any(), any());
+        verify(activityRepository, never()).saveAll(anyList());
         assertEquals(WeeklyExecution.ExecutionStatus.COMPLETED, testExecution.getStatus());
     }
 
@@ -110,13 +121,13 @@ class CommunityCollectorServiceTest {
     void collectActivity_shouldCollectFromSlackSource() {
         when(executionRepository.findById("exec-123")).thenReturn(Optional.of(testExecution));
         when(sourceRepository.findById("source-slack-123")).thenReturn(Optional.of(testSlackSource));
-        when(activityRepository.save(any(CommunityActivity.class))).thenAnswer(inv -> inv.getArgument(0));
 
         collectorService.collectActivity("exec-123", "source-slack-123");
 
         verify(executionRepository, times(1)).findById("exec-123");
         verify(sourceRepository, times(1)).findById("source-slack-123");
-        verify(activityRepository, atLeastOnce()).save(any(CommunityActivity.class));
+        verify(discordCollectorService, never()).collectWeeklyActivities(any(), any());
+        verify(activityRepository, never()).saveAll(anyList());
         assertEquals(WeeklyExecution.ExecutionStatus.COMPLETED, testExecution.getStatus());
     }
 
@@ -215,21 +226,35 @@ class CommunityCollectorServiceTest {
 
     @Test
     void fetchActivities_shouldMapDtoCorrectly() {
+        CommunityActivity fakeActivity = new CommunityActivity();
+        fakeActivity.setId("act-discord-2");
+        fakeActivity.setTitle("Title");
+        fakeActivity.setContent("Content");
+        fakeActivity.setAuthor("Author");
+        fakeActivity.setSourceUrl("https://discord.com/channels/1/2/3");
+        fakeActivity.setPublishedAt(LocalDateTime.now());
+        fakeActivity.setReactionCount(5);
+        fakeActivity.setResponseCount(2);
+        fakeActivity.setShareCount(1);
+
         when(executionRepository.findById("exec-123")).thenReturn(Optional.of(testExecution));
         when(sourceRepository.findById("source-discord-123")).thenReturn(Optional.of(testDiscordSource));
-        when(activityRepository.save(any(CommunityActivity.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(discordCollectorService.collectWeeklyActivities(any(), any()))
+                .thenReturn(List.of(fakeActivity));
+        when(activityRepository.saveAll(anyList())).thenAnswer(inv -> inv.getArgument(0));
 
         collectorService.collectActivity("exec-123", "source-discord-123");
 
-        verify(activityRepository, atLeastOnce()).save(argThat(activity ->
-                activity.getTitle() != null &&
-                activity.getContent() != null &&
-                activity.getAuthor() != null &&
-                activity.getSourceUrl() != null &&
-                activity.getPublishedAt() != null &&
-                activity.getReactionCount() != null &&
-                activity.getResponseCount() != null &&
-                activity.getShareCount() != null
-        ));
+        verify(activityRepository, atLeastOnce()).saveAll(argThat(activities -> {
+            CommunityActivity a = ((List<CommunityActivity>) activities).get(0);
+            return a.getTitle() != null &&
+                    a.getContent() != null &&
+                    a.getAuthor() != null &&
+                    a.getSourceUrl() != null &&
+                    a.getPublishedAt() != null &&
+                    a.getReactionCount() != null &&
+                    a.getResponseCount() != null &&
+                    a.getShareCount() != null;
+        }));
     }
 }

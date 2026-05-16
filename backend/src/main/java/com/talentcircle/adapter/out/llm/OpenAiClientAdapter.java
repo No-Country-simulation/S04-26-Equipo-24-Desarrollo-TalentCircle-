@@ -5,17 +5,18 @@ import com.talentcircle.domain.model.AiAnalysis;
 import com.talentcircle.domain.model.CommunityActivity;
 import com.talentcircle.domain.port.out.LlmClientPort;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Primary;
 import org.springframework.http.*;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+
+import java.time.Duration;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Primary
 @Component
 public class OpenAiClientAdapter implements LlmClientPort {
 
@@ -29,8 +30,15 @@ public class OpenAiClientAdapter implements LlmClientPort {
             @Value("${app.llm.openai.model:gpt-4o-mini}") String model) {
         this.apiKey = apiKey;
         this.model = model;
-        this.restTemplate = new RestTemplate();
+        this.restTemplate = createRestTemplate();
         this.objectMapper = new ObjectMapper();
+    }
+
+    private static RestTemplate createRestTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout((int) Duration.ofSeconds(30).toMillis());
+        factory.setReadTimeout((int) Duration.ofSeconds(60).toMillis());
+        return new RestTemplate(factory);
     }
 
     @Override
@@ -98,12 +106,36 @@ public class OpenAiClientAdapter implements LlmClientPort {
             analysis.setRelevanceScores("{}");
             analysis.setTopTopics("[]");
             analysis.setLlmProvider("openai");
-            analysis.setPromptTokens(0);
-            analysis.setCompletionTokens(0);
+            analysis.setPromptTokens(extractPromptTokens(response.getBody()));
+            analysis.setCompletionTokens(extractCompletionTokens(response.getBody()));
             return analysis;
         }
 
         throw new RuntimeException("Empty response from OpenAI API");
+    }
+
+    private int extractPromptTokens(Map<String, Object> responseBody) {
+        try {
+            Map<String, Object> usage = (Map<String, Object>) responseBody.get("usage");
+            if (usage != null && usage.get("prompt_tokens") instanceof Number n) {
+                return n.intValue();
+            }
+        } catch (Exception e) {
+            // Ignore parsing errors
+        }
+        return 0;
+    }
+
+    private int extractCompletionTokens(Map<String, Object> responseBody) {
+        try {
+            Map<String, Object> usage = (Map<String, Object>) responseBody.get("usage");
+            if (usage != null && usage.get("completion_tokens") instanceof Number n) {
+                return n.intValue();
+            }
+        } catch (Exception e) {
+            // Ignore parsing errors
+        }
+        return 0;
     }
 
     private String callOpenAiForText(String prompt) throws Exception {

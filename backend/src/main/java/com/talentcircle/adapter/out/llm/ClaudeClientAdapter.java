@@ -6,8 +6,11 @@ import com.talentcircle.domain.model.CommunityActivity;
 import com.talentcircle.domain.port.out.LlmClientPort;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+
+import java.time.Duration;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,8 +28,15 @@ public class ClaudeClientAdapter implements LlmClientPort {
                              @Value("${app.llm.claude.model:claude-3-5-sonnet-20241022}") String model) {
         this.apiKey = apiKey;
         this.model = model;
-        this.restTemplate = new RestTemplate();
+        this.restTemplate = createRestTemplate();
         this.objectMapper = new ObjectMapper();
+    }
+
+    private static RestTemplate createRestTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout((int) Duration.ofSeconds(30).toMillis());
+        factory.setReadTimeout((int) Duration.ofSeconds(60).toMillis());
+        return new RestTemplate(factory);
     }
 
     @Override
@@ -63,7 +73,7 @@ public class ClaudeClientAdapter implements LlmClientPort {
 
             if (response.getBody() != null) {
                 String content = extractContentFromResponse(response.getBody());
-                return parseAnalysisFromJson(content);
+                return buildAnalysisWithTokens(parseAnalysisFromJson(content), response.getBody());
             }
 
             throw new RuntimeException("Empty response from Claude API");
@@ -165,6 +175,23 @@ public class ClaudeClientAdapter implements LlmClientPort {
         analysis.setLlmProvider("claude");
         analysis.setPromptTokens(0);
         analysis.setCompletionTokens(0);
+        return analysis;
+    }
+
+    private AiAnalysis buildAnalysisWithTokens(AiAnalysis analysis, Map<String, Object> responseBody) {
+        try {
+            Map<String, Object> usage = (Map<String, Object>) responseBody.get("usage");
+            if (usage != null) {
+                if (usage.get("input_tokens") instanceof Number n) {
+                    analysis.setPromptTokens(n.intValue());
+                }
+                if (usage.get("output_tokens") instanceof Number n) {
+                    analysis.setCompletionTokens(n.intValue());
+                }
+            }
+        } catch (Exception e) {
+            // Ignore parsing errors
+        }
         return analysis;
     }
 }
