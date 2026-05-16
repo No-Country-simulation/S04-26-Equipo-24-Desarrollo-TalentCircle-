@@ -416,39 +416,39 @@ Cada tarea construye sobre la anterior; al final todos los módulos quedan integ
 
 **📋 Actividades:**
 
-**14.1** Crear `V1__create_users_and_sources.sql`
+**14.1** Crear `V1__h2__create_users_and_sources.sql`
 - Tablas: `users`, `community_sources`
 - Índices: `users(email)`, `community_sources(active)`
 - **Requisitos:** RF-28, RF-31
 
-**14.2** Crear `V2__create_weekly_executions.sql`
+**14.2** Crear `V2__h2__create_weekly_executions.sql`
 - Tablas: `weekly_executions`
 - Índices: `weekly_executions(week_start, status)`
 - **Requisitos:** RF-01
 
-**14.3** Crear `V3__create_community_activities.sql`
+**14.3** Crear `V3__h2__create_community_activities.sql`
 - Tablas: `community_activities`
 - Índices: `community_activities(execution_id, type)`
 - **Requisitos:** RF-02 a RF-06
 
-**14.4** Crear `V4__create_ai_analyses.sql`
+**14.4** Crear `V4__h2__create_ai_analyses.sql`
 - Tablas: `ai_analyses`
 - **Requisitos:** RF-07 a RF-10
 
-**14.5** Crear `V5__create_drafts_and_versions.sql`
+**14.5** Crear `V5__h2__create_drafts_and_versions.sql`
 - Tablas: `drafts`, `draft_versions`, `draft_sources`
 - Índices: `drafts(execution_id, channel, status)`
 - **Requisitos:** RF-12 a RF-16, RF-20
 
-**14.6** Crear `V6__create_publications.sql`
+**14.6** Crear `V6__h2__create_publications.sql`
 - Tablas: `publications`
 - **Requisitos:** RF-23 a RF-27
 
-**14.7** Crear `V7__create_pipeline_config.sql`
+**14.7** Crear `V7__h2__create_pipeline_config.sql`
 - Tablas: `pipeline_configs` (singleton)
 - **Requisitos:** RF-10
 
-**14.8** Crear `V8__seed_default_config.sql`
+**14.8** Crear `V8__h2__seed_default_config.sql`
 - Insertar configuración por defecto con prompts base para cada canal
 - **Requisitos:** RF-10
 

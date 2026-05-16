@@ -1,4 +1,4 @@
--- V6__create_publications.sql
+-- V6__h2__create_publications.sql (H2)
 
 CREATE TABLE publications (
     id VARCHAR(36) PRIMARY KEY,
@@ -7,7 +7,7 @@ CREATE TABLE publications (
     status VARCHAR(20) NOT NULL,
     external_post_id VARCHAR(255),
     published_at TIMESTAMP,
-    error_message TEXT,
+    error_message CLOB,
     retry_count INT DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

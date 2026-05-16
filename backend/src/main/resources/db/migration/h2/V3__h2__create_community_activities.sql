@@ -1,4 +1,4 @@
--- V3__create_community_activities.sql (H2)
+-- V3__h2__create_community_activities.sql (H2)
 
 CREATE TABLE community_activities (
     id VARCHAR(36) PRIMARY KEY,

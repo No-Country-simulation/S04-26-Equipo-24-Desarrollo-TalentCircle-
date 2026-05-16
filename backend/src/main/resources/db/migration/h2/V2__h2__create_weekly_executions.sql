@@ -1,4 +1,4 @@
--- V2__create_weekly_executions.sql
+-- V2__h2__create_weekly_executions.sql (H2)
 
 CREATE TABLE weekly_executions (
     id VARCHAR(36) PRIMARY KEY,

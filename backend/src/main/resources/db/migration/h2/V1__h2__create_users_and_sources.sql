@@ -1,4 +1,4 @@
--- V1__create_users_and_sources.sql (H2)
+-- V1__h2__create_users_and_sources.sql (H2)
 
 CREATE TABLE users (
     id VARCHAR(36) PRIMARY KEY,

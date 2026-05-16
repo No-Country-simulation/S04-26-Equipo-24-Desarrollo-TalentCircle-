@@ -1,11 +1,11 @@
--- V4__create_ai_analyses.sql
+-- V4__h2__create_ai_analyses.sql (H2)
 
 CREATE TABLE ai_analyses (
     id VARCHAR(36) PRIMARY KEY,
     execution_id VARCHAR(36) NOT NULL UNIQUE,
-    top_topics TEXT, -- JSONB in PostgreSQL
-    executive_summary TEXT,
-    relevance_scores TEXT, -- JSONB in PostgreSQL
+    top_topics CLOB,
+    executive_summary CLOB,
+    relevance_scores CLOB,
     llm_provider VARCHAR(50),
     prompt_tokens INT DEFAULT 0,
     completion_tokens INT DEFAULT 0,

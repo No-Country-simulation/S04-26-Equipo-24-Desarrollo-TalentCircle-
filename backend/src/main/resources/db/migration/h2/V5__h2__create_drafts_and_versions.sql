@@ -1,16 +1,16 @@
--- V5__create_drafts_and_versions.sql
+-- V5__h2__create_drafts_and_versions.sql (H2)
 
 CREATE TABLE drafts (
     id VARCHAR(36) PRIMARY KEY,
     execution_id VARCHAR(36) NOT NULL,
     channel VARCHAR(20) NOT NULL,
-    content TEXT,
-    edited_content TEXT,
+    content CLOB,
+    edited_content CLOB,
     status VARCHAR(20) NOT NULL,
     ai_score DECIMAL(4,2),
     approved_by VARCHAR(36),
     approved_at TIMESTAMP,
-    rejection_reason TEXT,
+    rejection_reason CLOB,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (execution_id) REFERENCES weekly_executions(id)
@@ -23,7 +23,7 @@ CREATE INDEX idx_drafts_status ON drafts(status);
 CREATE TABLE draft_versions (
     id VARCHAR(36) PRIMARY KEY,
     draft_id VARCHAR(36) NOT NULL,
-    content TEXT,
+    content CLOB,
     edited_by VARCHAR(36),
     edited_at TIMESTAMP,
     version_number INT DEFAULT 1,
