@@ -1,4 +1,4 @@
--- V8__seed_default_config.sql
+-- V9__seed_default_config.sql
 -- Seed default pipeline configuration with base prompts for each channel
 -- RF-10: Configuración de Prompts
 

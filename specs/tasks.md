@@ -448,7 +448,7 @@ Cada tarea construye sobre la anterior; al final todos los módulos quedan integ
 - Tablas: `pipeline_configs` (singleton)
 - **Requisitos:** RF-10
 
-**14.8** Crear `V8__seed_default_config.sql`
+**14.8** Crear `V9__seed_default_config.sql`
 - Insertar configuración por defecto con prompts base para cada canal
 - **Requisitos:** RF-10
 
