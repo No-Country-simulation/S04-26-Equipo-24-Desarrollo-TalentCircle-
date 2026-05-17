@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # Redis para caché y mensajería
   redis:
     image: redis:7-alpine
     container_name: talentcircle-redis
@@ -17,9 +16,8 @@ services:
       - talentcircle-network
     restart: always
 
-  # Backend Java ARM64
   backend:
-    image: chuycode/talentcircle-backend:v0.1.1
+    image: chuycode/talentcircle-backend:v0.3.0
     container_name: talentcircle-backend
     environment:
       - SPRING_PROFILES_ACTIVE=docker
@@ -31,7 +29,14 @@ services:
       - SPRING_FLYWAY_ENABLED=true
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
-      - JWT_SECRET=el-secreto-esMuySeguro
+      - SPRING_H2_CONSOLE_SETTINGS_WEB_ALLOW_OTHERS=true
+      # 👇 Aquí mapeamos las variables protegidas usando ${} 👇
+      - JWT_SECRET=${JWT_SECRET}
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+      - DISCORD_GUILD_ID=${DISCORD_GUILD_ID}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENAI_API_KEY=${OPENROUTER_API_KEY}
+      - OPENROUTER_MODEL=${OPENROUTER_MODEL}
     depends_on:
       redis:
         condition: service_healthy
@@ -39,18 +44,15 @@ services:
       - talentcircle-network
     restart: unless-stopped
 
-  # Frontend React
   frontend:
-    image: chuycode/talentcircle-frontend:v5.0
+    image: chuycode/talentcircle-frontend:v0.3.0
     container_name: talentcircle-frontend
-    # Puertos removidos: el tráfico entra por el gateway
     depends_on:
       - backend
     networks:
       - talentcircle-network
     restart: unless-stopped
 
-  # Nginx Reverse Proxy (Puerta de entrada única)
   gateway:
     image: nginx:alpine
     container_name: talentcircle-gateway
