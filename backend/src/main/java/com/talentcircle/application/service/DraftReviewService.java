@@ -105,7 +105,12 @@ public class DraftReviewService implements DraftReviewUseCase {
             throw new IllegalStateException("Only PENDING drafts can be approved. Current status: " + draft.getStatus());
         }
 
-        draft.setStatus(Draft.DraftStatus.APPROVED);
+        if (draft.getChannel() == Draft.Channel.NEWSLETTER) {
+            draft.setStatus(Draft.DraftStatus.PUBLISHED);
+            log.info("Newsletter draft auto-published to landing page. draftId={}", draftId);
+        } else {
+            draft.setStatus(Draft.DraftStatus.APPROVED);
+        }
         draft.setApprovedAt(LocalDateTime.now());
         draft.setApprovedBy(null); // In full impl: resolve User from SecurityContext
 

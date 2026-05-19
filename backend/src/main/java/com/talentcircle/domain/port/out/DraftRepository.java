@@ -9,4 +9,7 @@ import java.util.List;
 public interface DraftRepository extends JpaRepository<Draft, String> {
     List<Draft> findByExecutionId(String executionId);
     List<Draft> findByStatus(com.talentcircle.domain.model.Draft.DraftStatus status);
+    List<Draft> findByChannelAndStatusOrderByCreatedAtDesc(
+            com.talentcircle.domain.model.Draft.Channel channel,
+            com.talentcircle.domain.model.Draft.DraftStatus status);
 }
