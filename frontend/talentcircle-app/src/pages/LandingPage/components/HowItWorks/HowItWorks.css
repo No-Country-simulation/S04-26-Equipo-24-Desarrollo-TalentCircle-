@@ -1,0 +1,81 @@
+.lp-howitworks {
+  padding: 100px 24px;
+  background: #0d0f14;
+}
+
+.lp-howitworks__container {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.lp-howitworks__title {
+  font-size: 36px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 12px;
+}
+
+.lp-howitworks__subtitle {
+  font-size: 17px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0 56px;
+}
+
+.lp-howitworks__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+.lp-howitworks__step {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  text-align: left;
+  position: relative;
+  padding-bottom: 32px;
+}
+
+.lp-howitworks__step-number {
+  min-width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f5a623, #e8830a);
+  color: #0d0f14;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  flex-shrink: 0;
+  box-shadow: 0 3px 12px rgba(245, 166, 35, 0.3);
+}
+
+.lp-howitworks__step-content {
+  flex: 1;
+}
+
+.lp-howitworks__step-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 4px;
+}
+
+.lp-howitworks__step-desc {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.lp-howitworks__connector {
+  position: absolute;
+  left: 21px;
+  top: 44px;
+  bottom: 0;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.08);
+}

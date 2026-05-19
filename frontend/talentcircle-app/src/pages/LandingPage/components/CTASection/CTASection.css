@@ -1,0 +1,64 @@
+.lp-cta {
+  padding: 100px 24px;
+  background: #0d0f14;
+  position: relative;
+  overflow: hidden;
+}
+
+.lp-cta::before {
+  content: '';
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  top: -200px;
+  right: -100px;
+  background: radial-gradient(circle, rgba(245, 166, 35, 0.06) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.lp-cta__container {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.lp-cta__title {
+  font-size: 36px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 12px;
+  line-height: 1.2;
+}
+
+.lp-cta__subtitle {
+  font-size: 17px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0 32px;
+}
+
+.lp-cta__btn {
+  display: inline-block;
+  text-decoration: none;
+  padding: 14px 36px;
+  background: linear-gradient(135deg, #f5a623, #e8830a);
+  color: #0d0f14;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(245, 166, 35, 0.3);
+}
+
+.lp-cta__btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(245, 166, 35, 0.4);
+}
+
+.lp-cta__footnote {
+  margin-top: 16px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.3);
+}
