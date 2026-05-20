@@ -33,10 +33,10 @@ public class DiscordMessageService {
 
     private final MessageRepository messageRepository;
 
-    @Value("${app.discord.bot-token}")
+    @Value("${app.discord.bot-token:}")
     private String botToken;
 
-    @Value("${app.discord.guild-id}")
+    @Value("${app.discord.guild-id:}")
     private String guildId;
 
     @Value("${app.discord.channel-name:backend-java}")
